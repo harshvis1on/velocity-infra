@@ -2,7 +2,7 @@
 
 import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { addMachineSchema } from '@/lib/validations'
+import { addMachineSchema, createOfferSchema } from '@/lib/validations'
 
 export async function addMachine(formData: FormData) {
   const supabase = createClient()
@@ -88,26 +88,37 @@ export async function createOffer(formData: FormData) {
 
   if (!user) throw new Error('You must be logged in.')
 
-  const machineId = formData.get('machine_id') as string
-  const pricePerGpuHr = parseFloat(formData.get('price_per_gpu_hr_inr') as string)
-  const storagePriceMonth = parseFloat(formData.get('storage_price_per_gb_month_inr') as string || '4.5')
-  const minGpu = parseInt(formData.get('min_gpu') as string || '1', 10)
-  const offerEndDate = formData.get('offer_end_date') as string
-  const interruptibleMinPrice = formData.get('interruptible_min_price_inr') as string
-  const reservedDiscount = parseFloat(formData.get('reserved_discount_factor') as string || '0.4')
-
-  if (!machineId || !pricePerGpuHr || !offerEndDate) {
-    throw new Error('Machine ID, GPU price, and offer end date are required.')
+  const raw = {
+    machineId: formData.get('machine_id') as string,
+    pricePerGpuHrInr: parseFloat(formData.get('price_per_gpu_hr_inr') as string),
+    storagePricePerGbMonthInr: parseFloat(formData.get('storage_price_per_gb_month_inr') as string || '4.5'),
+    minGpu: parseInt(formData.get('min_gpu') as string || '1', 10),
+    offerEndDate: formData.get('offer_end_date') as string,
+    interruptibleMinPriceInr: formData.get('interruptible_min_price_inr')
+      ? parseFloat(formData.get('interruptible_min_price_inr') as string)
+      : undefined,
+    reservedDiscountFactor: parseFloat(formData.get('reserved_discount_factor') as string || '0.4'),
   }
+
+  const parsed = createOfferSchema.safeParse(raw)
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues.map(i => i.message).join(', '))
+  }
+
+  const { machineId, pricePerGpuHrInr, storagePricePerGbMonthInr, minGpu, offerEndDate, interruptibleMinPriceInr, reservedDiscountFactor } = parsed.data
 
   const { data: machine } = await supabase
     .from('machines')
-    .select('id, gpu_count')
+    .select('id, host_id, gpu_count')
     .eq('id', machineId)
     .eq('host_id', user.id)
     .single()
 
   if (!machine) throw new Error('Machine not found or not owned by you.')
+
+  if (minGpu > machine.gpu_count) {
+    throw new Error(`min_gpu (${minGpu}) exceeds machine GPU count (${machine.gpu_count})`)
+  }
 
   const { data: existing } = await supabase
     .from('offers')
@@ -117,20 +128,23 @@ export async function createOffer(formData: FormData) {
     .maybeSingle()
 
   if (existing) {
-    throw new Error('Machine already has an active offer. Unlist it first.')
+    throw new Error('Machine already has an active offer. Unlist the existing offer first.')
   }
+
+  const autoPrice = formData.get('auto_price') === 'true'
 
   const { error } = await supabase
     .from('offers')
     .insert({
       machine_id: machineId,
       host_id: user.id,
-      price_per_gpu_hr_inr: pricePerGpuHr,
-      storage_price_per_gb_month_inr: storagePriceMonth,
+      price_per_gpu_hr_inr: pricePerGpuHrInr,
+      storage_price_per_gb_month_inr: storagePricePerGbMonthInr,
       min_gpu: minGpu,
-      offer_end_date: new Date(offerEndDate).toISOString(),
-      interruptible_min_price_inr: interruptibleMinPrice ? parseFloat(interruptibleMinPrice) : null,
-      reserved_discount_factor: reservedDiscount,
+      offer_end_date: offerEndDate,
+      interruptible_min_price_inr: interruptibleMinPriceInr || null,
+      reserved_discount_factor: reservedDiscountFactor,
+      auto_price: autoPrice,
     })
 
   if (error) {
@@ -275,4 +289,106 @@ export async function cancelMaintenance(machineId: string) {
     .eq('status', 'scheduled')
 
   revalidatePath('/host/dashboard')
+}
+
+export async function pauseMachine(machineId: string) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('You must be logged in.')
+
+  const { data: machine } = await supabase
+    .from('machines')
+    .select('id, status')
+    .eq('id', machineId)
+    .eq('host_id', user.id)
+    .single()
+
+  if (!machine) throw new Error('Machine not found.')
+  if (machine.status === 'offline') throw new Error('Machine is offline. Bring it online first.')
+
+  await supabase
+    .from('offers')
+    .update({ status: 'unlisted' })
+    .eq('machine_id', machineId)
+    .eq('host_id', user.id)
+    .eq('status', 'active')
+
+  await supabase
+    .from('machines')
+    .update({ listed: false, status: 'paused' })
+    .eq('id', machineId)
+    .eq('host_id', user.id)
+
+  revalidatePath('/host/dashboard')
+  revalidatePath('/console')
+}
+
+export async function resumeMachine(machineId: string) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('You must be logged in.')
+
+  const { data: machine } = await supabase
+    .from('machines')
+    .select('id, status')
+    .eq('id', machineId)
+    .eq('host_id', user.id)
+    .single()
+
+  if (!machine) throw new Error('Machine not found.')
+  if (machine.status !== 'paused' && machine.status !== 'offline') {
+    throw new Error('Machine is not paused or offline.')
+  }
+
+  await supabase
+    .from('machines')
+    .update({ status: 'available' })
+    .eq('id', machineId)
+    .eq('host_id', user.id)
+
+  revalidatePath('/host/dashboard')
+  revalidatePath('/console')
+}
+
+export async function removeMachine(machineId: string) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('You must be logged in.')
+
+  const { data: machine } = await supabase
+    .from('machines')
+    .select('id, status, gpu_allocated')
+    .eq('id', machineId)
+    .eq('host_id', user.id)
+    .single()
+
+  if (!machine) throw new Error('Machine not found.')
+  if (machine.status !== 'offline') throw new Error('Machine must be offline before removal.')
+  if ((machine.gpu_allocated || 0) > 0) throw new Error('Machine still has allocated GPUs. Wait for all rentals to end.')
+
+  const { data: running } = await supabase
+    .from('instances')
+    .select('id')
+    .eq('machine_id', machineId)
+    .in('status', ['creating', 'running', 'stopped'])
+    .limit(1)
+
+  if (running && running.length > 0) {
+    throw new Error('Machine has active instances. Destroy them first.')
+  }
+
+  await supabase
+    .from('offers')
+    .update({ status: 'unlisted' })
+    .eq('machine_id', machineId)
+    .eq('host_id', user.id)
+
+  await supabase
+    .from('machines')
+    .update({ status: 'removed' })
+    .eq('id', machineId)
+    .eq('host_id', user.id)
+
+  revalidatePath('/host/dashboard')
+  revalidatePath('/console')
 }

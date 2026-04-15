@@ -4,20 +4,16 @@ import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { createRentalSchema } from '@/lib/validations';
 import { withRateLimit } from '@/lib/with-rate-limit';
 import { RENT_LIMIT } from '@/lib/rate-limit';
+import { getProvider } from '@/lib/providers';
+import type { ProviderName } from '@/lib/providers/types';
+import { getUsdToInr } from '@/lib/providers/margin';
 
 const supabaseAdmin = createAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-function allocateGpuIndices(totalGpus: number, allocated: number[], requestedCount: number): number[] | null {
-  const available: number[] = [];
-  for (let i = 0; i < totalGpus; i++) {
-    if (!allocated.includes(i)) available.push(i);
-  }
-  if (available.length < requestedCount) return null;
-  return available.slice(0, requestedCount);
-}
+// GPU allocation is now handled atomically via the allocate_gpus RPC (SELECT ... FOR UPDATE)
 
 export async function POST(request: Request) {
   const rateLimitResponse = withRateLimit(RENT_LIMIT)(request);
@@ -42,7 +38,7 @@ export async function POST(request: Request) {
     .from('offers')
     .select(`
       *,
-      machines (id, gpu_model, gpu_count, vram_gb, ram_gb, vcpu_count, storage_gb, host_id, gpu_allocated, status)
+      machines (id, gpu_model, gpu_count, vram_gb, ram_gb, vcpu_count, storage_gb, host_id, gpu_allocated, status, source, provider_machine_id)
     `)
     .eq('id', offerId)
     .eq('status', 'active')
@@ -57,12 +53,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Machine not found' }, { status: 404 });
   }
 
+  const isProxy = machine.source !== 'native';
+
+  if (machine.status === 'paused' || machine.status === 'offline' || machine.status === 'removed') {
+    return NextResponse.json({ error: 'Machine is not accepting new rentals' }, { status: 409 });
+  }
+
   if (gpuCount < offer.min_gpu) {
     return NextResponse.json({ error: `Minimum GPU count for this offer is ${offer.min_gpu}` }, { status: 400 });
   }
 
-  if ((gpuCount & (gpuCount - 1)) !== 0 && gpuCount !== machine.gpu_count) {
-    return NextResponse.json({ error: 'GPU count must be a power of 2 or the full machine' }, { status: 400 });
+  if (!isProxy) {
+    if ((gpuCount & (gpuCount - 1)) !== 0 && gpuCount !== machine.gpu_count) {
+      return NextResponse.json({ error: 'GPU count must be a power of 2 or the full machine' }, { status: 400 });
+    }
   }
 
   const gpuAvailable = machine.gpu_count - (machine.gpu_allocated || 0);
@@ -99,9 +103,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'User profile not found' }, { status: 404 });
   }
 
-  const effectivePrice = rentalType === 'interruptible'
-    ? bidPriceInr!
-    : offer.price_per_gpu_hr_inr;
+  let effectivePrice: number;
+  if (rentalType === 'interruptible') {
+    effectivePrice = bidPriceInr!;
+  } else if (rentalType === 'reserved' && offer.reserved_discount_factor) {
+    effectivePrice = offer.price_per_gpu_hr_inr * (1 - offer.reserved_discount_factor);
+  } else {
+    effectivePrice = offer.price_per_gpu_hr_inr;
+  }
   const estimatedHourlyCost = effectivePrice * gpuCount;
 
   if (profile.wallet_balance_inr < estimatedHourlyCost) {
@@ -111,18 +120,48 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data: activeContracts } = await supabaseAdmin
-    .from('rental_contracts')
-    .select('gpu_indices')
-    .eq('machine_id', machine.id)
-    .eq('status', 'active');
-
-  const usedIndices = (activeContracts || []).flatMap(c => c.gpu_indices || []);
-  const gpuIndices = allocateGpuIndices(machine.gpu_count, usedIndices, gpuCount);
-  if (!gpuIndices) {
-    return NextResponse.json({ error: 'Could not allocate GPU indices' }, { status: 409 });
+  // --- SSH key resolution (shared by both paths) ---
+  let finalSshKey = '';
+  if (newSshKey) {
+    finalSshKey = newSshKey;
+    await supabaseAdmin.from('ssh_keys').insert({
+      user_id: user.id,
+      name: 'Key ' + new Date().toLocaleDateString(),
+      public_key: newSshKey,
+    });
+  } else if (sshKeyId) {
+    const { data: savedKey } = await supabaseAdmin
+      .from('ssh_keys')
+      .select('public_key')
+      .eq('id', sshKeyId)
+      .eq('user_id', user.id)
+      .single();
+    if (!savedKey) {
+      return NextResponse.json({ error: 'SSH key not found or does not belong to you' }, { status: 404 });
+    }
+    finalSshKey = savedKey.public_key;
   }
 
+  // --- GPU allocation (native only) ---
+  let gpuIndices: number[] = [];
+
+  if (!isProxy) {
+    const { data: allocResult, error: allocErr } = await supabaseAdmin.rpc('allocate_gpus', {
+      p_machine_id: machine.id,
+      p_gpu_count: gpuCount,
+    });
+
+    if (allocErr || allocResult?.error) {
+      return NextResponse.json(
+        { error: allocResult?.error || allocErr?.message || 'Could not allocate GPU indices' },
+        { status: 409 }
+      );
+    }
+
+    gpuIndices = allocResult.gpu_indices;
+  }
+
+  // --- Create rental contract ---
   const { data: contract, error: contractErr } = await supabaseAdmin
     .from('rental_contracts')
     .insert({
@@ -131,7 +170,7 @@ export async function POST(request: Request) {
       renter_id: user.id,
       gpu_count: gpuCount,
       gpu_indices: gpuIndices,
-      price_per_gpu_hr_inr: offer.price_per_gpu_hr_inr,
+      price_per_gpu_hr_inr: effectivePrice,
       storage_price_per_gb_month_inr: offer.storage_price_per_gb_month_inr,
       bandwidth_upload_price_per_gb_inr: offer.bandwidth_upload_price_per_gb_inr,
       bandwidth_download_price_per_gb_inr: offer.bandwidth_download_price_per_gb_inr,
@@ -146,23 +185,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: contractErr.message }, { status: 500 });
   }
 
-  let finalSshKey = '';
-  if (newSshKey) {
-    finalSshKey = newSshKey;
-    await supabaseAdmin.from('ssh_keys').insert({
-      user_id: user.id,
-      name: 'Key ' + new Date().toLocaleDateString(),
-      public_key: newSshKey,
-    });
-  } else if (sshKeyId) {
-    const { data: savedKey } = await supabaseAdmin
-      .from('ssh_keys')
-      .select('public_key')
-      .eq('id', sshKeyId)
-      .single();
-    if (savedKey) finalSshKey = savedKey.public_key;
-  }
-
+  // --- Create instance ---
   const { data: instance, error: instanceErr } = await supabaseAdmin
     .from('instances')
     .insert({
@@ -190,12 +213,56 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: instanceErr.message }, { status: 500 });
   }
 
-  await supabaseAdmin
-    .from('machines')
-    .update({ gpu_allocated: (machine.gpu_allocated || 0) + gpuCount })
-    .eq('id', machine.id);
+  // --- Proxy provisioning ---
+  if (isProxy) {
+    try {
+      const provider = getProvider(machine.source as ProviderName);
+      const result = await provider.provisionInstance({
+        providerMachineId: machine.provider_machine_id,
+        dockerImage: template.docker_image,
+        gpuCount: gpuCount,
+        diskSizeGb: diskSize,
+        sshPublicKey: finalSshKey || undefined,
+      });
 
-  // Increment template deploy count
+      await supabaseAdmin
+        .from('instances')
+        .update({
+          provider_instance_id: result.providerId,
+          provider_cost_per_hr: result.actualCostPerHrUsd * getUsdToInr(),
+          status: 'running',
+          host_port: result.connectionInfo.sshPort,
+          ssh_password: result.connectionInfo.sshPassword || null,
+        })
+        .eq('id', instance.id);
+
+      if (result.connectionInfo.publicIp) {
+        await supabaseAdmin
+          .from('machines')
+          .update({ public_ip: result.connectionInfo.publicIp })
+          .eq('id', machine.id);
+      }
+    } catch (provisionErr) {
+      const msg = provisionErr instanceof Error ? provisionErr.message : 'Unknown provisioning error';
+
+      await Promise.all([
+        supabaseAdmin
+          .from('instances')
+          .update({ status: 'failed' })
+          .eq('id', instance.id),
+        supabaseAdmin
+          .from('rental_contracts')
+          .update({ status: 'terminated', ended_at: new Date().toISOString() })
+          .eq('id', contract.id),
+      ]);
+
+      return NextResponse.json(
+        { error: `Proxy provisioning failed: ${msg}` },
+        { status: 502 }
+      );
+    }
+  }
+
   await supabaseAdmin
     .from('templates')
     .update({ deploy_count: (template.deploy_count || 0) + 1 })
@@ -204,6 +271,8 @@ export async function POST(request: Request) {
   return NextResponse.json({
     contract,
     instance,
-    message: `Rental contract created. ${gpuCount} GPU(s) allocated on devices [${gpuIndices.join(', ')}]. Container is being launched.`,
+    message: isProxy
+      ? `Rental contract created. ${gpuCount} GPU(s) provisioned via ${machine.source}. Instance is running.`
+      : `Rental contract created. ${gpuCount} GPU(s) allocated on devices [${gpuIndices.join(', ')}]. Container is being launched.`,
   }, { status: 201 });
 }

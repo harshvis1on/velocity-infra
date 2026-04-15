@@ -24,61 +24,66 @@ export async function POST(request: Request) {
 
     const hasRazorpay = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET
 
-    if (hasRazorpay) {
-      const instance = new Razorpay({
-        key_id: process.env.RAZORPAY_KEY_ID!,
-        key_secret: process.env.RAZORPAY_KEY_SECRET!,
-      })
-
-      const order = await instance.orders.create({
-        amount: amountInr * 100,
-        currency: 'INR',
-        receipt: `receipt_${Date.now()}`,
-        notes: { userId: user.id },
-      })
-
-      return NextResponse.json({ order })
-    }
-
-    // Test mode: directly credit wallet when Razorpay isn't configured
-    const { error: rpcError } = await supabase.rpc('credit_wallet', {
-      p_user_id: user.id,
-      p_amount: amountInr,
-    })
-
-    if (rpcError) {
-      // Fallback: direct update if RPC doesn't exist
-      const { data: current } = await supabase
-        .from('users')
-        .select('wallet_balance_inr')
-        .eq('id', user.id)
-        .single()
-
-      const currentBalance = current?.wallet_balance_inr || 0
-
-      const { error: updateError } = await supabase
-        .from('users')
-        .update({ wallet_balance_inr: currentBalance + amountInr })
-        .eq('id', user.id)
-
-      if (updateError) {
-        return NextResponse.json({ error: 'Failed to credit wallet' }, { status: 500 })
+    if (!hasRazorpay) {
+      if (process.env.NODE_ENV !== 'development') {
+        return NextResponse.json(
+          { error: 'Payment gateway not configured. Please contact support.' },
+          { status: 503 }
+        )
       }
+
+      // Test mode: only allowed in development
+      const { error: rpcError } = await supabase.rpc('credit_wallet', {
+        p_user_id: user.id,
+        p_amount: amountInr,
+      })
+
+      if (rpcError) {
+        const { data: current } = await supabase
+          .from('users')
+          .select('wallet_balance_inr')
+          .eq('id', user.id)
+          .single()
+
+        const currentBalance = current?.wallet_balance_inr || 0
+
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({ wallet_balance_inr: currentBalance + amountInr })
+          .eq('id', user.id)
+
+        if (updateError) {
+          return NextResponse.json({ error: 'Failed to credit wallet' }, { status: 500 })
+        }
+      }
+
+      await supabase.from('wallet_transactions').insert({
+        user_id: user.id,
+        amount_inr: amountInr,
+        type: 'credit',
+        description: 'Wallet top-up (test mode)',
+        payment_id: `test_${Date.now()}`,
+      })
+
+      return NextResponse.json({
+        testMode: true,
+        message: `₹${amountInr} credited to wallet (dev test mode)`,
+      })
     }
 
-    // Log the transaction (ignore errors if table doesn't exist)
-    await supabase.from('wallet_transactions').insert({
-      user_id: user.id,
-      amount_inr: amountInr,
-      type: 'credit',
-      description: 'Wallet top-up (test mode)',
-      payment_id: `test_${Date.now()}`,
+    const instance = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID!,
+      key_secret: process.env.RAZORPAY_KEY_SECRET!,
     })
 
-    return NextResponse.json({
-      testMode: true,
-      message: `₹${amountInr} credited to wallet (test mode — Razorpay not configured)`,
+    const order = await instance.orders.create({
+      amount: amountInr * 100,
+      currency: 'INR',
+      receipt: `receipt_${Date.now()}`,
+      notes: { userId: user.id },
     })
+
+    return NextResponse.json({ order })
   } catch (error: any) {
     console.error('Error creating order:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })

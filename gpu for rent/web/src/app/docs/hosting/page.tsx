@@ -35,9 +35,31 @@ export default function HostingPage() {
         </h2>
         <ul className="list-disc space-y-2 pl-5 leading-relaxed">
           <li>List idle GPUs on the public marketplace.</li>
-          <li>Earn 85% of compute charges from renters.</li>
+          <li>Earn 85–95% of compute charges from renters (depends on your provider tier).</li>
           <li>Fully automated billing—per minute, per GPU.</li>
         </ul>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-white">
+          XP &amp; Provider Tiers <StatusBadge kind="live" />
+        </h2>
+        <p className="leading-relaxed">
+          You earn XP by hosting successful jobs, verifying machines, maintaining uptime, and
+          referring other providers. Higher tiers reduce your platform fee:
+        </p>
+        <ul className="list-disc space-y-2 pl-5 leading-relaxed">
+          <li><span className="text-white">Bronze (0 XP):</span> 15% platform fee — starting tier</li>
+          <li><span className="text-white">Silver (1,000 XP):</span> 12% platform fee</li>
+          <li><span className="text-white">Gold (5,000 XP):</span> 10% platform fee</li>
+          <li><span className="text-white">Platinum (15,000 XP):</span> 7% platform fee</li>
+          <li><span className="text-white">Diamond (50,000 XP):</span> 5% platform fee</li>
+        </ul>
+        <p className="leading-relaxed text-sm text-gray-400">
+          XP is granted automatically: +10 XP per hour of successfully hosted compute, +50 XP for
+          machine verification, +200 XP for 30-day perfect uptime streaks, +25 XP per completed
+          referral.
+        </p>
       </section>
 
       <section className="space-y-4">
@@ -104,15 +126,22 @@ export default function HostingPage() {
           {`# Install
 pip install -r requirements.txt
 
-# Run
+# Run (use your API key — never the service role key)
 SUPABASE_URL=https://xxx.supabase.co \\
-SUPABASE_SERVICE_KEY=eyJ... \\
 MACHINE_ID=your-uuid \\
-python agent.py
+VELOCITY_JOB_SECRET=your-shared-secret \\
+python agent.py --api-key vi_live_xxxxx
 
 # Self-test
 python agent.py --self-test`}
         </CodeBlock>
+        <WarningBox title="Required: VELOCITY_JOB_SECRET">
+          <p className="text-amber-100/90">
+            The agent requires <code className="font-mono text-sm">VELOCITY_JOB_SECRET</code> to
+            verify signed job payloads. Without this, the agent will reject all jobs. Set the same
+            secret on both the API server and the agent.
+          </p>
+        </WarningBox>
       </section>
 
       <section className="space-y-4">

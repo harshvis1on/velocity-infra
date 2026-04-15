@@ -18,22 +18,25 @@ const steps = [
         <Link href="/signup" className="text-primary underline-offset-2 hover:underline">
           /signup
         </Link>{' '}
-        with email or Google/GitHub OAuth.
+        with email or Google/GitHub OAuth. You&apos;ll receive{' '}
+        <span className="text-white font-medium">₹65 in free credits</span> (about 1 hour of RTX
+        4090 compute) instantly. Got a friend&apos;s referral link? Use it at signup and you{' '}
+        <em>both</em> earn bonus credits when you rent your first GPU.
       </>
     ),
   },
   {
     title: 'Complete KYC',
     badge: 'live' as const,
-    body: <>Phone OTP verification is required. PAN verification applies to hosts.</>,
+    body: <>Phone OTP verification is required. PAN verification applies to providers (hosts).</>,
   },
   {
-    title: 'Add Funds',
+    title: 'Add Funds (or use your free credits)',
     badge: 'live' as const,
     body: (
       <>
         Razorpay supports UPI, cards, and net banking. Minimum ₹100. Funds go to your wallet for
-        per-minute billing.
+        per-minute billing. Your signup credits are enough to test-drive a GPU without adding funds.
       </>
     ),
   },

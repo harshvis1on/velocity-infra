@@ -7,6 +7,9 @@ import {
   unlistMachine,
   scheduleMaintenance,
   cancelMaintenance,
+  pauseMachine,
+  resumeMachine,
+  removeMachine,
 } from './actions'
 import { createClient } from '@/utils/supabase/client'
 
@@ -17,6 +20,8 @@ function getActiveOffer(machine: any) {
 function statusColor(status: string) {
   if (status === 'rented') return 'bg-green-500'
   if (status === 'available') return 'bg-blue-500'
+  if (status === 'paused') return 'bg-yellow-500'
+  if (status === 'offline') return 'bg-red-500'
   return 'bg-gray-500'
 }
 
@@ -337,13 +342,62 @@ export default function MachineList({ machines }: { machines: any[] }) {
                       </form>
                     </div>
 
-                    <button
-                      onClick={() => handleUnlistMachine(machine.id)}
-                      disabled={loading}
-                      className="text-[11px] text-red-400 hover:text-red-300"
-                    >
-                      Take machine offline
-                    </button>
+                    <div>
+                      <h5 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Machine Controls</h5>
+                      <div className="space-y-1.5">
+                        {(machine.status === 'available' || machine.status === 'rented') && (
+                          <button
+                            onClick={async () => {
+                              if (!confirm('Pause this machine? No new rentals will be accepted. Existing rentals will continue until they finish.')) return
+                              setLoading(true)
+                              try { await pauseMachine(machine.id) } catch (err: any) { alert(err.message) } finally { setLoading(false) }
+                            }}
+                            disabled={loading}
+                            className="w-full text-left text-[11px] font-medium py-1.5 px-2 rounded border border-yellow-500/20 text-yellow-400 bg-yellow-500/5 hover:bg-yellow-500/10 disabled:opacity-50 transition-colors"
+                          >
+                            Pause — stop new rentals
+                          </button>
+                        )}
+                        {(machine.status === 'paused' || machine.status === 'offline') && (
+                          <button
+                            onClick={async () => {
+                              setLoading(true)
+                              try { await resumeMachine(machine.id) } catch (err: any) { alert(err.message) } finally { setLoading(false) }
+                            }}
+                            disabled={loading}
+                            className="w-full text-left text-[11px] font-medium py-1.5 px-2 rounded border border-green-500/20 text-green-400 bg-green-500/5 hover:bg-green-500/10 disabled:opacity-50 transition-colors"
+                          >
+                            Resume — accept new rentals
+                          </button>
+                        )}
+                        {machine.status !== 'offline' && (
+                          <button
+                            onClick={async () => {
+                              if (!confirm('Take machine offline? All running instances will be stopped and renters will be refunded.')) return
+                              setLoading(true)
+                              try { await unlistMachine(machine.id) } catch (err: any) { alert(err.message) } finally { setLoading(false) }
+                            }}
+                            disabled={loading}
+                            className="w-full text-left text-[11px] font-medium py-1.5 px-2 rounded border border-red-500/20 text-red-400 bg-red-500/5 hover:bg-red-500/10 disabled:opacity-50 transition-colors"
+                          >
+                            Go offline — stop everything + refund renters
+                          </button>
+                        )}
+                        {machine.status === 'offline' && (
+                          <button
+                            onClick={async () => {
+                              if (!confirm('Permanently remove this machine from your account? This cannot be undone.')) return
+                              setLoading(true)
+                              try { await removeMachine(machine.id) } catch (err: any) { alert(err.message) } finally { setLoading(false) }
+                            }}
+                            disabled={loading}
+                            className="w-full text-left text-[11px] font-medium py-1.5 px-2 rounded border border-red-500/30 text-red-500 bg-red-500/5 hover:bg-red-500/10 disabled:opacity-50 transition-colors"
+                          >
+                            Remove machine permanently
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

@@ -1,10 +1,10 @@
 import { createClient } from '@/utils/supabase/server'
-import { Inter } from 'next/font/google'
+import { Outfit } from 'next/font/google'
 import "./globals.css";
 import GlobalNav from './components/GlobalNav';
 import GlobalFooter from './components/GlobalFooter';
 
-const inter = Inter({ subsets: ['latin'], display: 'swap' })
+const outfit = Outfit({ subsets: ['latin'], display: 'swap', variable: '--font-sans' })
 
 export const metadata = {
   title: "Velocity — The cheapest GPUs for AI",
@@ -20,7 +20,7 @@ export default async function RootLayout({
   const { data: { user } } = await supabase.auth.getUser()
 
   return (
-    <html lang="en" className={inter.className}>
+    <html lang="en" className={outfit.className}>
       <head>
         <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
       </head>

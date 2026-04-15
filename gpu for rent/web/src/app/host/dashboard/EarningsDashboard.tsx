@@ -8,6 +8,8 @@ interface EarningsData {
   thisMonth: number
   thisWeek: number
   pendingPayout: number
+  totalPlatformFees: number
+  currentTier: { name: string; fee: string }
   payouts: any[]
   dailyEarnings: { date: string; amount: number }[]
   machineUtilization: { machineId: string; gpu_model: string; utilization: number; earned: number }[]
@@ -28,19 +30,46 @@ export default function EarningsDashboard({ hostId, machines }: { hostId: string
       const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
       const rangeStart = timeRange === '7d' ? weekAgo : timeRange === '30d' ? monthAgo : new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
 
-      const { data: allTimeTx } = await supabase
-        .from('transactions')
-        .select('amount_inr, created_at')
-        .eq('user_id', hostId)
-        .eq('type', 'host_payout')
-        .eq('status', 'completed')
+      const [{ data: allTimeTx }, { data: payouts }, { data: userProfile }, { data: instanceFees }] = await Promise.all([
+        supabase
+          .from('transactions')
+          .select('amount_inr, created_at')
+          .eq('user_id', hostId)
+          .eq('type', 'host_payout')
+          .eq('status', 'completed'),
+        supabase
+          .from('host_payouts')
+          .select('*')
+          .eq('host_id', hostId)
+          .order('created_at', { ascending: false })
+          .limit(20),
+        supabase
+          .from('users')
+          .select('provider_tier')
+          .eq('id', hostId)
+          .single(),
+        supabase
+          .from('machines')
+          .select('instances(platform_fee_inr)')
+          .eq('host_id', hostId),
+      ])
 
-      const { data: payouts } = await supabase
-        .from('host_payouts')
-        .select('*')
-        .eq('host_id', hostId)
-        .order('created_at', { ascending: false })
-        .limit(20)
+      const TIERS: Record<string, { name: string; fee: string }> = {
+        bronze: { name: 'Bronze', fee: '15%' },
+        silver: { name: 'Silver', fee: '12%' },
+        gold: { name: 'Gold', fee: '10%' },
+        platinum: { name: 'Platinum', fee: '7%' },
+        diamond: { name: 'Diamond', fee: '5%' },
+      }
+      const tierKey = userProfile?.provider_tier || 'bronze'
+      const currentTier = TIERS[tierKey] || TIERS.bronze
+
+      const totalPlatformFees = (instanceFees || []).reduce((sum, m) => {
+        const fees = (m.instances as any[] || []).reduce(
+          (s: number, i: any) => s + (i.platform_fee_inr || 0), 0
+        )
+        return sum + fees
+      }, 0)
 
       const totalAllTime = (allTimeTx || []).reduce((sum, t) => sum + t.amount_inr, 0)
 
@@ -92,6 +121,8 @@ export default function EarningsDashboard({ hostId, machines }: { hostId: string
         thisMonth,
         thisWeek,
         pendingPayout,
+        totalPlatformFees,
+        currentTier,
         payouts: payouts || [],
         dailyEarnings,
         machineUtilization,
@@ -152,6 +183,37 @@ export default function EarningsDashboard({ hostId, machines }: { hostId: string
         <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
           <div className="text-xs text-gray-400 mb-1">Pending Payout</div>
           <div className="text-2xl font-bold font-mono text-yellow-400">₹{data.pendingPayout.toFixed(2)}</div>
+        </div>
+      </div>
+
+      <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+        <h3 className="text-sm font-bold text-gray-400 mb-3">Platform Fees</h3>
+        <div className="flex items-center gap-6">
+          <div>
+            <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Total Fees Paid</div>
+            <div className="text-xl font-bold font-mono text-red-400">₹{data.totalPlatformFees.toFixed(2)}</div>
+          </div>
+          <div className="w-px h-10 bg-white/[0.06]" />
+          <div>
+            <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Current Tier</div>
+            <div className="text-xl font-bold text-white">{data.currentTier.name}</div>
+          </div>
+          <div className="w-px h-10 bg-white/[0.06]" />
+          <div>
+            <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Fee Rate</div>
+            <div className="text-xl font-bold text-primary">{data.currentTier.fee}</div>
+          </div>
+          {data.totalAllTime > 0 && (
+            <>
+              <div className="w-px h-10 bg-white/[0.06]" />
+              <div>
+                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Effective Rate</div>
+                <div className="text-xl font-bold font-mono text-gray-300">
+                  {((data.totalPlatformFees / (data.totalAllTime + data.totalPlatformFees)) * 100).toFixed(1)}%
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

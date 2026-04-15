@@ -22,7 +22,7 @@ export default async function ConsolePage() {
   if (user) {
     const { data: p } = await supabase
       .from('users')
-      .select('wallet_balance_inr, phone, role')
+      .select('wallet_balance_inr, phone, role, referral_code')
       .eq('id', user.id)
       .single()
     
@@ -51,7 +51,7 @@ export default async function ConsolePage() {
         rental_contracts (*)
       `)
       .eq('renter_id', user.id)
-      .in('status', ['creating', 'loading', 'running', 'stopped'])
+      .in('status', ['creating', 'loading', 'running', 'stopped', 'failed', 'error'])
       .order('created_at', { ascending: false })
 
     if (instanceData) {
@@ -101,19 +101,28 @@ export default async function ConsolePage() {
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
 
   return (
-    <div className="min-h-screen flex bg-[#050505] text-white font-sans">
+    <div className="min-h-screen flex bg-[#060606] text-white" style={{ fontFamily: 'var(--font-sans, Outfit, sans-serif)' }}>
       <ConsoleSidebar 
         role={profile?.role || 'renter'} 
         walletBalance={walletBalance} 
         userEmail={user?.email} 
         userPhone={profile?.phone} 
         currentSpendRate={currentSpendRate}
+        referralCode={profile?.referral_code}
       />
 
-      {/* MAIN CONTENT */}
       <main className="flex-1 flex flex-col h-screen overflow-y-auto">
-        <header className="h-16 flex items-center justify-between px-8 border-b border-white/10 bg-[#050505] sticky top-0 z-10">
-          <h1 className="text-xl font-bold">GPU Marketplace</h1>
+        <header className="h-14 flex items-center justify-between px-8 border-b border-white/[0.06] bg-[#060606]/80 backdrop-blur-xl sticky top-0 z-10">
+          <div className="flex items-center gap-3">
+            <h1 className="text-sm font-medium text-white">GPU Marketplace</h1>
+            <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-gray-600">
+              <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              {(initialOffers || []).reduce(
+                (sum: number, offer: any) => sum + ((offer.machines?.gpu_count || 0) - (offer.machines?.gpu_allocated || 0)),
+                0
+              )} GPUs available
+            </div>
+          </div>
           <div className="flex items-center gap-4">
             <ProfileDropdown userName={userName} email={user?.email || ''} />
           </div>
@@ -123,10 +132,10 @@ export default async function ConsolePage() {
           <h2 className="text-2xl font-bold text-white">
             Welcome back, {userName}
           </h2>
-          <p className="text-gray-400 text-sm mt-1">Browse GPUs at up to 80% off cloud pricing. Deploy in seconds.</p>
+          <p className="text-gray-500 text-sm mt-1">Browse GPUs at up to 80% off cloud pricing. Deploy in seconds.</p>
         </div>
 
-        <Suspense fallback={<div className="px-8 py-12 text-gray-500 text-sm">Loading marketplace…</div>}>
+        <Suspense fallback={<div className="px-8 py-12 text-gray-600 text-sm">Loading marketplace…</div>}>
           <Marketplace
             initialOffers={initialOffers}
             activeInstances={activeInstances}
@@ -137,10 +146,12 @@ export default async function ConsolePage() {
         </Suspense>
 
         <div className="px-8 pb-8">
-          <div className="bg-gradient-to-r from-primary/[0.04] to-yellow-400/[0.02] border border-primary/10 rounded-xl p-4 flex items-center gap-3">
-            <span className="text-lg">🎁</span>
-            <p className="text-sm text-gray-400 flex-1">Know someone who needs GPUs? <Link href="/invite" className="text-primary font-medium hover:underline">Invite them and both get free GPU hours →</Link></p>
-          </div>
+          <Link href="/invite" className="block border border-white/[0.06] rounded-xl p-4 hover:border-primary/20 transition-all group">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-yellow-400/10 flex items-center justify-center text-sm shrink-0">🎁</div>
+              <p className="text-sm text-gray-500 flex-1">Know someone who needs GPUs? <span className="text-primary font-medium group-hover:underline">Invite them and both get free GPU hours →</span></p>
+            </div>
+          </Link>
         </div>
       </main>
     </div>

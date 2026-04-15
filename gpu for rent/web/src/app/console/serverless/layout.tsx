@@ -16,7 +16,7 @@ export default async function ServerlessLayout({
   if (user) {
     const { data: p } = await supabase
       .from('users')
-      .select('wallet_balance_inr, phone, role')
+      .select('wallet_balance_inr, phone, role, referral_code')
       .eq('id', user.id)
       .single()
     
@@ -34,7 +34,8 @@ export default async function ServerlessLayout({
         role={profile?.role || 'renter'} 
         walletBalance={walletBalance} 
         userEmail={user?.email} 
-        userPhone={profile?.phone} 
+        userPhone={profile?.phone}
+        referralCode={profile?.referral_code}
       />
 
       {/* MAIN CONTENT */}

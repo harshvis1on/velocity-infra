@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
-import { createOfferSchema } from '@/lib/validations';
+import { createOfferSchema, updateOfferSchema } from '@/lib/validations';
 
 export async function GET() {
   const supabase = createClient();
@@ -36,6 +36,7 @@ export async function POST(request: Request) {
   }
 
   const { machineId, pricePerGpuHrInr, storagePricePerGbMonthInr, bandwidthUploadPricePerGbInr, bandwidthDownloadPricePerGbInr, minGpu, offerEndDate, interruptibleMinPriceInr, reservedDiscountFactor } = parsed.data;
+  const autoPrice = body.autoPrice === true;
 
   const { data: machine, error: machineErr } = await supabase
     .from('machines')
@@ -76,6 +77,7 @@ export async function POST(request: Request) {
       offer_end_date: offerEndDate,
       interruptible_min_price_inr: interruptibleMinPriceInr || null,
       reserved_discount_factor: reservedDiscountFactor,
+      auto_price: autoPrice,
     })
     .select()
     .single();
@@ -88,4 +90,80 @@ export async function POST(request: Request) {
     .eq('id', machineId);
 
   return NextResponse.json(offer, { status: 201 });
+}
+
+export async function PATCH(request: Request) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const body = await request.json();
+  const { offerId, ...updates } = body;
+
+  if (!offerId || typeof offerId !== 'string') {
+    return NextResponse.json({ error: 'offerId is required' }, { status: 400 });
+  }
+
+  const parsed = updateOfferSchema.safeParse(updates);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues.map(i => i.message).join(', ') },
+      { status: 400 }
+    );
+  }
+
+  const { data: offer, error: offerErr } = await supabase
+    .from('offers')
+    .select('id, machine_id, status, machines (id, gpu_count)')
+    .eq('id', offerId)
+    .eq('host_id', user.id)
+    .single();
+
+  if (offerErr || !offer) {
+    return NextResponse.json({ error: 'Offer not found or not owned by you' }, { status: 404 });
+  }
+
+  if (offer.status !== 'active') {
+    return NextResponse.json({ error: 'Only active offers can be updated' }, { status: 409 });
+  }
+
+  const machine = offer.machines as any;
+  if (parsed.data.minGpu && machine && parsed.data.minGpu > machine.gpu_count) {
+    return NextResponse.json(
+      { error: `min_gpu (${parsed.data.minGpu}) exceeds machine GPU count (${machine.gpu_count})` },
+      { status: 400 }
+    );
+  }
+
+  const dbUpdates: Record<string, any> = {};
+  if (parsed.data.pricePerGpuHrInr !== undefined) dbUpdates.price_per_gpu_hr_inr = parsed.data.pricePerGpuHrInr;
+  if (parsed.data.storagePricePerGbMonthInr !== undefined) dbUpdates.storage_price_per_gb_month_inr = parsed.data.storagePricePerGbMonthInr;
+  if (parsed.data.bandwidthUploadPricePerGbInr !== undefined) dbUpdates.bandwidth_upload_price_per_gb_inr = parsed.data.bandwidthUploadPricePerGbInr;
+  if (parsed.data.bandwidthDownloadPricePerGbInr !== undefined) dbUpdates.bandwidth_download_price_per_gb_inr = parsed.data.bandwidthDownloadPricePerGbInr;
+  if (parsed.data.minGpu !== undefined) dbUpdates.min_gpu = parsed.data.minGpu;
+  if (parsed.data.offerEndDate !== undefined) dbUpdates.offer_end_date = parsed.data.offerEndDate;
+  if (parsed.data.interruptibleMinPriceInr !== undefined) dbUpdates.interruptible_min_price_inr = parsed.data.interruptibleMinPriceInr;
+  if (parsed.data.reservedDiscountFactor !== undefined) dbUpdates.reserved_discount_factor = parsed.data.reservedDiscountFactor;
+
+  if (Object.keys(dbUpdates).length === 0) {
+    return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+  }
+
+  const { data: updated, error: updateErr } = await supabase
+    .from('offers')
+    .update(dbUpdates)
+    .eq('id', offerId)
+    .select()
+    .single();
+
+  if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
+
+  if (dbUpdates.price_per_gpu_hr_inr) {
+    await supabase
+      .from('machines')
+      .update({ price_per_hour_inr: dbUpdates.price_per_gpu_hr_inr })
+      .eq('id', offer.machine_id);
+  }
+
+  return NextResponse.json(updated);
 }

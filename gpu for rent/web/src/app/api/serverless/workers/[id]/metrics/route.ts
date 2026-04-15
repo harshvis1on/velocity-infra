@@ -12,8 +12,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
     const body = await request.json();
     const { current_load, queue_time, perf_rating, state, auth_secret } = body;
 
-    // Basic auth check for the PyWorker
-    if (auth_secret !== process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 10)) {
+    const cronSecret = process.env.CRON_SECRET;
+    if (!cronSecret || auth_secret !== cronSecret) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

@@ -110,8 +110,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     machine_id: machine.id,
-    supabase_url: (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
-    supabase_service_key: (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim(),
-    message: 'Machine registered. Run self-test to complete setup.',
+    api_url: (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
+    message: 'Machine registered. Use your API key (--api-key) to authenticate the agent. Run self-test to complete setup.',
   }, { status: 201 })
 }

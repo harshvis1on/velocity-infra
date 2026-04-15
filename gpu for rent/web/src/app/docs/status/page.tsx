@@ -54,7 +54,7 @@ export default function StatusDocsPage() {
                   'Authentication',
                   '✅ Live',
                   'Email, Google, GitHub OAuth',
-                  'No 2FA, no account deletion',
+                  '2FA and account deletion not yet available',
                 ],
                 [
                   'KYC onboarding',
@@ -101,7 +101,7 @@ export default function StatusDocsPage() {
                   'Marketplace UI',
                   '✅ Live',
                   'Browse offers, filter, rental type tabs',
-                  'No sorting, no saved searches',
+                  'Sorting and saved searches not yet available',
                 ],
                 [
                   'Offer management',
@@ -278,7 +278,7 @@ export default function StatusDocsPage() {
                   'Wallet system',
                   '✅ Live',
                   'Razorpay deposits, auto-deduct',
-                  'No payouts, no refunds',
+                  'Payouts and refunds not yet available',
                 ],
                 [
                   'GST compliance',

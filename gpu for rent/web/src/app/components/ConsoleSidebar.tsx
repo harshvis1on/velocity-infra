@@ -12,6 +12,7 @@ interface ConsoleSidebarProps {
   userEmail?: string;
   userPhone?: string;
   currentSpendRate?: number;
+  referralCode?: string;
 }
 
 export default function ConsoleSidebar({ 
@@ -19,7 +20,8 @@ export default function ConsoleSidebar({
   walletBalance, 
   userEmail, 
   userPhone,
-  currentSpendRate = 0
+  currentSpendRate = 0,
+  referralCode,
 }: ConsoleSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -35,35 +37,33 @@ export default function ConsoleSidebar({
   };
 
   return (
-    <aside className="w-64 border-r border-white/10 bg-[#0a0a0a] flex flex-col h-screen sticky top-0 shrink-0">
-      <div className="h-16 flex items-center px-6 border-b border-white/10">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded bg-primary flex items-center justify-center font-bold text-black text-xs">V</div>
-          <span className="font-bold tracking-tight">Velocity</span>
+    <aside className="w-64 border-r border-white/[0.06] bg-[#080808] flex flex-col h-screen sticky top-0 shrink-0">
+      <div className="h-14 flex items-center px-5 border-b border-white/[0.06]">
+        <Link href="/" className="flex items-center gap-2.5">
+          <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center font-bold text-black text-[10px]">V</div>
+          <span className="font-bold text-sm tracking-tight text-white">Velocity</span>
         </Link>
       </div>
       
-      <div className="p-4 flex-1 overflow-y-auto">
-        <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 mt-2">GPUs</div>
-        <nav className="space-y-1 mb-8">
+      <div className="p-3 flex-1 overflow-y-auto">
+        <div className="text-[10px] font-medium text-gray-600 uppercase tracking-[0.15em] mb-3 mt-3 px-3">GPUs</div>
+        <nav className="space-y-0.5 mb-6">
           {isRenter && (
-            <>
-              <Link 
-                href="/console" 
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium text-sm transition-colors ${
-                  isActive('/console') ? 'bg-primary/10 text-primary' : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <HardDrive className="w-4 h-4" />
-                GPU Instances
-              </Link>
-            </>
+            <Link 
+              href="/console" 
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
+                isActive('/console') ? 'bg-primary/[0.08] text-primary font-medium' : 'text-gray-500 hover:text-white hover:bg-white/[0.04]'
+              }`}
+            >
+              <HardDrive className="w-4 h-4" />
+              GPU Instances
+            </Link>
           )}
           {isHost && (
             <Link 
               href="/host/dashboard" 
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium text-sm transition-colors ${
-                isActive('/host/dashboard') ? 'bg-primary/10 text-primary' : 'text-gray-400 hover:text-white hover:bg-white/5'
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
+                isActive('/host/dashboard') ? 'bg-primary/[0.08] text-primary font-medium' : 'text-gray-500 hover:text-white hover:bg-white/[0.04]'
               }`}
             >
               <LayoutDashboard className="w-4 h-4" />
@@ -72,12 +72,12 @@ export default function ConsoleSidebar({
           )}
         </nav>
 
-        <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Account</div>
-        <nav className="space-y-1">
+        <div className="text-[10px] font-medium text-gray-600 uppercase tracking-[0.15em] mb-3 px-3">Account</div>
+        <nav className="space-y-0.5">
           <Link 
             href="/billing" 
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium text-sm transition-colors ${
-              isActive('/billing') ? 'bg-primary/10 text-primary' : 'text-gray-400 hover:text-white hover:bg-white/5'
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
+              isActive('/billing') ? 'bg-primary/[0.08] text-primary font-medium' : 'text-gray-500 hover:text-white hover:bg-white/[0.04]'
             }`}
           >
             <CreditCard className="w-4 h-4" />
@@ -85,8 +85,8 @@ export default function ConsoleSidebar({
           </Link>
           <Link 
             href="/settings" 
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium text-sm transition-colors ${
-              isActive('/settings') ? 'bg-primary/10 text-primary' : 'text-gray-400 hover:text-white hover:bg-white/5'
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
+              isActive('/settings') ? 'bg-primary/[0.08] text-primary font-medium' : 'text-gray-500 hover:text-white hover:bg-white/[0.04]'
             }`}
           >
             <Settings className="w-4 h-4" />
@@ -95,39 +95,58 @@ export default function ConsoleSidebar({
         </nav>
       </div>
 
-      <div className="px-4 pt-4 pb-2">
+      <div className="px-3 pt-3 pb-2">
         <Link
           href="/invite"
-          className="block bg-gradient-to-r from-primary/[0.06] to-yellow-400/[0.04] border border-primary/20 rounded-lg p-3 hover:border-primary/40 transition-colors"
+          className="block border border-white/[0.06] rounded-lg p-3 hover:border-primary/20 transition-all group"
         >
           <div className="flex items-center gap-2 mb-1.5">
             <Gift className="w-3.5 h-3.5 text-primary" />
-            <span className="text-xs font-bold text-white">Invite & Earn</span>
+            <span className="text-xs font-medium text-white">Invite & Earn</span>
           </div>
-          <p className="text-[10px] text-gray-500 leading-relaxed">
-            Share your link — both get free GPU hours
-          </p>
+          {referralCode ? (
+            <div className="flex items-center gap-1.5 mt-1">
+              <code className="text-[10px] text-gray-500 bg-white/[0.03] px-1.5 py-0.5 rounded truncate">
+                {referralCode}
+              </code>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigator.clipboard.writeText(`${window.location.origin}/signup?ref=${referralCode}`);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                className="text-[10px] text-primary hover:text-primary/80 shrink-0 transition-colors"
+              >
+                {copied ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
+          ) : (
+            <p className="text-[10px] text-gray-600 leading-relaxed">
+              Share your link — both get free GPU hours
+            </p>
+          )}
         </Link>
       </div>
 
-      <div className="p-4 border-t border-white/10">
-        <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+      <div className="p-3 border-t border-white/[0.06]">
+        <div className="bg-white/[0.03] rounded-lg p-3 border border-white/[0.06]">
           <div className="flex justify-between items-start mb-1">
-            <div className="text-xs text-gray-400">{isHost ? 'Unpaid Earnings' : 'Wallet Balance'}</div>
+            <div className="text-[10px] text-gray-500 uppercase tracking-wider">{isHost ? 'Unpaid Earnings' : 'Balance'}</div>
             {currentSpendRate > 0 && (
-              <div className="text-[10px] text-red-400 bg-red-400/10 px-1.5 py-0.5 rounded flex items-center gap-1" title="Current spend rate for active instances">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"></span>
+              <div className="text-[9px] text-red-400 bg-red-400/10 px-1.5 py-0.5 rounded flex items-center gap-1">
+                <span className="w-1 h-1 rounded-full bg-red-400 animate-pulse" />
                 ₹{currentSpendRate.toFixed(2)}/hr
               </div>
             )}
           </div>
-          <div className={`text-lg font-mono font-bold mb-2 ${isHost ? 'text-primary' : 'text-white'}`}>₹{walletBalance.toFixed(2)}</div>
+          <div className={`text-lg font-bold mb-2 tabular-nums ${isHost ? 'text-primary' : 'text-white'}`}>₹{walletBalance.toFixed(2)}</div>
           {isHost ? (
             <button
               onClick={() => router.push('/billing')}
-              className="w-full bg-white/10 hover:bg-white/20 text-white text-xs font-bold py-1.5 rounded transition-colors"
+              className="w-full bg-white/[0.06] hover:bg-white/[0.1] text-white text-xs font-medium py-1.5 rounded-md transition-all"
             >
-              Request Payout (UPI)
+              Request Payout
             </button>
           ) : (
             <AddFundsButton userEmail={userEmail} userPhone={userPhone} />

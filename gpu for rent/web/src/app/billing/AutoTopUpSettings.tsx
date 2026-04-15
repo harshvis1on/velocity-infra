@@ -17,16 +17,30 @@ export default function AutoTopUpSettings({
   const [threshold, setThreshold] = useState(initialThreshold)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const handleSave = async () => {
     setSaving(true)
     setSaved(false)
+    setErrorMsg(null)
     try {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      if (!user) {
+        setErrorMsg('You must be signed in to save settings.')
+        return
+      }
 
-      await supabase
+      if (amount < 100) {
+        setErrorMsg('Top-up amount must be at least ₹100.')
+        return
+      }
+      if (threshold < 10) {
+        setErrorMsg('Threshold must be at least ₹10.')
+        return
+      }
+
+      const { data, error } = await supabase
         .from('users')
         .update({
           auto_topup_enabled: enabled,
@@ -34,9 +48,18 @@ export default function AutoTopUpSettings({
           auto_topup_threshold_inr: threshold,
         })
         .eq('id', user.id)
+        .select('auto_topup_enabled, auto_topup_amount_inr, auto_topup_threshold_inr')
+        .single()
+
+      if (error || !data) {
+        setErrorMsg(error?.message || 'Failed to save settings. Please try again.')
+        return
+      }
 
       setSaved(true)
-      setTimeout(() => setSaved(false), 2000)
+      setTimeout(() => setSaved(false), 3000)
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Something went wrong. Please try again.')
     } finally {
       setSaving(false)
     }
@@ -89,10 +112,29 @@ export default function AutoTopUpSettings({
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="w-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-sm font-bold py-2 rounded transition-colors disabled:opacity-50"
+            className="w-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-sm font-bold py-2 rounded transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Settings'}
+            {saving && (
+              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            )}
+            {saving ? 'Saving…' : saved ? '✓ Saved' : 'Save Settings'}
           </button>
+
+          {errorMsg && (
+            <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">
+              {errorMsg}
+            </div>
+          )}
+
+          {saved && (
+            <div className="rounded-lg border border-green-500/20 bg-green-500/10 px-3 py-2 text-xs text-green-400">
+              Auto top-up settings saved successfully.
+            </div>
+          )}
+
           <p className="text-xs text-gray-500">
             When your balance drops below the threshold, you will be prompted to top up your wallet.
           </p>

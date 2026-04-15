@@ -1,431 +1,344 @@
-import React from 'react';
-import Link from 'next/link';
+'use client';
 
-function CheckIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-    </svg>
-  );
+import React, { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+
+const YIELD_DATA = [
+  { gpu: 'RTX 4090', hwCost: '$1,599', rate: 0.55, monthly: 231, breakEven: '7 months', roi: '173%' },
+  { gpu: 'A100 80GB', hwCost: '$15,000', rate: 1.20, monthly: 504, breakEven: '30 months', roi: '40%' },
+  { gpu: 'H100 SXM5', hwCost: '$30,000', rate: 2.50, monthly: 1050, breakEven: '29 months', roi: '42%' },
+  { gpu: 'L40S 48GB', hwCost: '$7,000', rate: 0.80, monthly: 336, breakEven: '21 months', roi: '58%' },
+  { gpu: 'A6000 48GB', hwCost: '$4,500', rate: 0.70, monthly: 294, breakEven: '16 months', roi: '78%' },
+];
+
+const TIERS = [
+  { name: 'Bronze', fee: '15%', xp: '0' },
+  { name: 'Silver', fee: '12%', xp: '1K' },
+  { name: 'Gold', fee: '10%', xp: '5K' },
+  { name: 'Platinum', fee: '7%', xp: '15K' },
+  { name: 'Diamond', fee: '5%', xp: '50K' },
+];
+
+function useInView(threshold = 0.15) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [threshold]);
+  return { ref, visible };
+}
+
+function CountUp({ target, suffix = '' }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0);
+  const { ref, visible } = useInView();
+  useEffect(() => {
+    if (!visible) return;
+    let start = 0;
+    const duration = 1200;
+    const step = (ts: number) => {
+      if (!start) start = ts;
+      const progress = Math.min((ts - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.round(eased * target));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [visible, target]);
+  return <span ref={ref as any}>{count}{suffix}</span>;
 }
 
 export default function HostPage() {
-  const verificationItems = [
-    'CUDA version >= 12.0',
-    'Reliability score >= 90%',
-    'At least 3 open ports per GPU (100 recommended)',
-    'Internet download speed >= 500 Mbps',
-    'Internet upload speed >= 500 Mbps',
-    'GPU VRAM >= 7 GB',
-    'Pass the automated self-test',
-  ];
-
-  const tiers = [
-    { name: 'Bronze', fee: '15%', xp: '0' },
-    { name: 'Silver', fee: '12%', xp: '1,000' },
-    { name: 'Gold', fee: '10%', xp: '5,000' },
-    { name: 'Platinum', fee: '7%', xp: '15,000' },
-    { name: 'Diamond', fee: '5%', xp: '50,000' },
-  ];
-
-  const hoursPerDay = 14;
-  const daysPerMonth = 30;
-  const monthlyHours = hoursPerDay * daysPerMonth;
-
-  const earningsRows = [
-    { gpu: 'NVIDIA RTX 4090', rate: 65, monthly: 65 * monthlyHours },
-    { gpu: 'NVIDIA A100', rate: 150, monthly: 150 * monthlyHours },
-    { gpu: 'NVIDIA H100', rate: 280, monthly: 280 * monthlyHours },
-  ];
-
-  const formatInr = (n: number) =>
-    n.toLocaleString('en-IN', { maximumFractionDigits: 0, style: 'currency', currency: 'INR' });
+  const heroSection = useInView(0.1);
+  const yieldSection = useInView(0.1);
+  const thesisSection1 = useInView(0.15);
+  const thesisSection2 = useInView(0.15);
+  const stepsSection = useInView(0.1);
+  const tiersSection = useInView(0.1);
+  const ctaSection = useInView(0.1);
 
   return (
-    <main className="min-h-screen flex flex-col bg-[#050505] text-white">
-      <section className="relative px-4 sm:px-6 lg:px-8 py-24 md:py-32 lg:py-40 flex flex-col items-center justify-center text-center overflow-hidden border-b border-white/[0.06]">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/10 rounded-full blur-[120px] -z-10 opacity-50" />
-        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-balance max-w-5xl leading-tight mb-6">
-          Earn revenue{' '}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-400">from your hardware.</span>
-        </h1>
-        <p className="mt-6 text-lg md:text-xl text-gray-400 max-w-2xl text-balance mx-auto mb-10">
-          List GPUs on the Velocity marketplace. Set your own <span className="text-gray-300">per-GPU pricing</span>,
-          earn with <span className="text-gray-300">per-second billing</span>, and serve multiple renters with{' '}
-          <span className="text-gray-300">GPU slicing</span>. Gain <span className="text-primary font-medium">XP</span>{' '}
-          for reliability and advance through tiers for lower platform fees.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            href="/host/setup"
-            className="bg-primary hover:bg-primary-dark text-black font-bold py-3 px-8 rounded-lg text-lg transition-all shadow-[0_0_20px_rgba(0,255,136,0.3)] hover:shadow-[0_0_30px_rgba(0,255,136,0.5)] text-center"
-          >
-            Start Providing
-          </Link>
-          <Link
-            href="/host/datacenter-apply"
-            className="bg-[#0a0a0a] hover:bg-white/[0.08] border border-white/[0.06] text-white font-medium py-3 px-8 rounded-lg text-lg transition-all text-center"
-          >
-            Apply for Enterprise
-          </Link>
-        </div>
-      </section>
+    <main className="flex flex-col bg-[#060606] text-white overflow-hidden" style={{ fontFamily: 'var(--font-sans, Outfit, sans-serif)' }}>
+      <style jsx global>{`
 
-      <section className="py-24 bg-black border-y border-white/[0.06]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">How it works</h2>
-            <p className="text-gray-400">
-              From agent install to recurring revenue: verify your hardware, publish offers, and collect payouts while your tier tracks
-              experience and fee reductions.
-            </p>
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(32px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeRight { from { opacity: 0; transform: translateX(-32px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeLeft { from { opacity: 0; transform: translateX(32px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes sweepRight { from { transform: scaleX(0); transform-origin: left; } to { transform: scaleX(1); } }
+        @keyframes breathe { 0%, 100% { opacity: 0.4; transform: translateX(-50%) scale(1); } 50% { opacity: 0.7; transform: translateX(-50%) scale(1.1); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+        .anim-fadeUp { opacity: 0; }
+        .anim-fadeUp.visible { animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .anim-fadeRight { opacity: 0; }
+        .anim-fadeRight.visible { animation: fadeRight 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .anim-fadeLeft { opacity: 0; }
+        .anim-fadeLeft.visible { animation: fadeLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .anim-fadeIn { opacity: 0; }
+        .anim-fadeIn.visible { animation: fadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .delay-1 { animation-delay: 0.1s !important; }
+        .delay-2 { animation-delay: 0.2s !important; }
+        .delay-3 { animation-delay: 0.3s !important; }
+        .delay-4 { animation-delay: 0.4s !important; }
+        .delay-5 { animation-delay: 0.5s !important; }
+        .delay-6 { animation-delay: 0.6s !important; }
+        .delay-7 { animation-delay: 0.7s !important; }
+      `}</style>
+
+      {/* ═══════ HERO — SPLIT SCREEN ═══════ */}
+      <section ref={heroSection.ref} className="min-h-[100dvh] grid grid-cols-1 lg:grid-cols-2 relative">
+        <div className="absolute top-[30%] left-1/2 -translate-x-1/2 w-[900px] h-[600px] pointer-events-none -z-10" style={{ background: 'radial-gradient(ellipse, rgba(0,230,122,0.05) 0%, transparent 70%)', animation: 'breathe 8s ease-in-out infinite' }} />
+
+        <div className="flex flex-col justify-center px-6 sm:px-10 lg:px-16 xl:px-20 py-24 lg:py-0 relative z-10">
+          <div className={`text-[11px] tracking-[3px] uppercase text-[#444] font-semibold mb-8 anim-fadeUp ${heroSection.visible ? 'visible' : ''}`}>
+            For Providers & Investors
           </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 relative">
-            <div className="hidden lg:block absolute top-12 left-[12.5%] right-[12.5%] h-0.5 bg-gradient-to-r from-primary/0 via-primary/40 to-primary/0 -z-10" />
-
-            <div className="bg-[#0a0a0a] border border-white/[0.06] p-8 rounded-2xl shadow-2xl text-center relative">
-              <div className="w-16 h-16 bg-primary/10 border border-primary/30 text-primary rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6 shadow-[0_0_15px_rgba(0,255,136,0.2)]">
-                1
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-white">Install the agent</h3>
-              <p className="text-gray-400 text-sm">
-                Install supported drivers and the Velocity Infra agent on your host. Guided setup connects the machine to the marketplace
-                and prepares it for health checks.
-              </p>
-            </div>
-
-            <div className="bg-[#0a0a0a] border border-white/[0.06] p-8 rounded-2xl shadow-2xl text-center relative">
-              <div className="w-16 h-16 bg-primary/10 border border-primary/30 text-primary rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6 shadow-[0_0_15px_rgba(0,255,136,0.2)]">
-                2
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-white">Verify hardware</h3>
-              <p className="text-gray-400 text-sm">
-                Automated checks cover CUDA, network, PCIe, and port exposure. Meet the bar to earn a verified badge and unlock bookings
-                with confidence.
-              </p>
-            </div>
-
-            <div className="bg-[#0a0a0a] border border-white/[0.06] p-8 rounded-2xl shadow-2xl text-center relative">
-              <div className="w-16 h-16 bg-primary/10 border border-primary/30 text-primary rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6 shadow-[0_0_15px_rgba(0,255,136,0.2)]">
-                3
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-white">Set pricing</h3>
-              <p className="text-gray-400 text-sm">
-                Define per-GPU rates, minimum slice size, offer duration, and options such as reserved or interruptible pricing. Contracts
-                reflect what you publish.
-              </p>
-            </div>
-
-            <div className="bg-[#0a0a0a] border border-white/[0.06] p-8 rounded-2xl shadow-2xl text-center relative">
-              <div className="w-16 h-16 bg-primary/10 border border-primary/30 text-primary rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6 shadow-[0_0_15px_rgba(0,255,136,0.2)]">
-                4
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-white">Earn revenue and XP</h3>
-              <p className="text-gray-400 text-sm">
-                Per-second billing and multi-tenant slicing when enabled. Uptime and successful rentals accumulate XP toward higher tiers
-                and lower platform fees.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-24 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Provider tiers</h2>
-          <p className="text-gray-400 max-w-2xl mx-auto">
-            Platform fees decrease as you earn XP. Tier thresholds reward consistent quality and availability.
+          <h1 className={`text-[clamp(40px,5.5vw,84px)] font-extrabold leading-[1.05] tracking-tight mb-7 anim-fadeUp delay-1 ${heroSection.visible ? 'visible' : ''}`}>
+            Own the infrastructure<br className="hidden sm:block" /> of the <span className="text-[#00e67a] relative">AI era
+              <span className="absolute bottom-1 left-0 right-0 h-[2px] bg-gradient-to-r from-[#00e67a] to-transparent" style={{ animation: heroSection.visible ? 'sweepRight 1.2s 0.8s cubic-bezier(0.16,1,0.3,1) both' : 'none' }} />
+            </span>
+          </h1>
+          <p className={`text-[17px] font-light text-[#777] leading-[1.7] max-w-[440px] mb-10 anim-fadeUp delay-2 ${heroSection.visible ? 'visible' : ''}`}>
+            In every technology revolution, the biggest returns go to those who own the infrastructure. In AI, that infrastructure is GPU compute. Your hardware generates yield while powering the next wave of intelligence.
           </p>
-        </div>
-        <div className="overflow-x-auto rounded-2xl border border-white/[0.06] bg-[#0a0a0a] shadow-2xl">
-          <table className="w-full text-left text-sm md:text-base">
-            <thead>
-              <tr className="border-b border-white/[0.06] bg-white/[0.03]">
-                <th className="py-4 px-6 font-semibold text-white">Tier</th>
-                <th className="py-4 px-6 font-semibold text-white">Platform fee</th>
-                <th className="py-4 px-6 font-semibold text-white">XP required</th>
-              </tr>
-            </thead>
-            <tbody className="text-gray-300">
-              {tiers.map((row) => (
-                <tr key={row.name} className="border-b border-white/[0.06] last:border-0">
-                  <td className="py-4 px-6 font-medium text-white">{row.name}</td>
-                  <td className="py-4 px-6 text-primary font-semibold">{row.fee}</td>
-                  <td className="py-4 px-6">{row.xp}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p className="mt-6 text-center text-sm text-gray-500">
-          XP is earned from completed rental time and reliability signals; exact rules appear in your provider dashboard.
-        </p>
-      </section>
-
-      <section className="py-24 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Hardware requirements</h2>
-          <p className="text-gray-400">Minimum specifications required before you publish an offer.</p>
-        </div>
-        <div className="overflow-x-auto rounded-2xl border border-white/[0.06] bg-[#0a0a0a] shadow-2xl">
-          <table className="w-full text-left text-sm md:text-base">
-            <thead>
-              <tr className="border-b border-white/[0.06] bg-white/[0.03]">
-                <th className="py-4 px-6 font-semibold text-white">Requirement</th>
-                <th className="py-4 px-6 font-semibold text-white">Specification</th>
-              </tr>
-            </thead>
-            <tbody className="text-gray-300">
-              <tr className="border-b border-white/[0.06]">
-                <td className="py-4 px-6 text-gray-400 whitespace-nowrap">Operating system</td>
-                <td className="py-4 px-6">Ubuntu 18.04 or newer</td>
-              </tr>
-              <tr className="border-b border-white/[0.06]">
-                <td className="py-4 px-6 text-gray-400 whitespace-nowrap">GPU</td>
-                <td className="py-4 px-6">NVIDIA GPU (10-series or newer; RTX 2080 or newer recommended)</td>
-              </tr>
-              <tr className="border-b border-white/[0.06]">
-                <td className="py-4 px-6 text-gray-400 whitespace-nowrap">CPU</td>
-                <td className="py-4 px-6">At least one physical CPU core per GPU</td>
-              </tr>
-              <tr className="border-b border-white/[0.06]">
-                <td className="py-4 px-6 text-gray-400 whitespace-nowrap">System RAM</td>
-                <td className="py-4 px-6">At least 4 GB per GPU</td>
-              </tr>
-              <tr className="border-b border-white/[0.06]">
-                <td className="py-4 px-6 text-gray-400 whitespace-nowrap">Storage</td>
-                <td className="py-4 px-6">128 GB SSD per GPU</td>
-              </tr>
-              <tr className="border-b border-white/[0.06]">
-                <td className="py-4 px-6 text-gray-400 whitespace-nowrap">Internet</td>
-                <td className="py-4 px-6">At least 10 Mbps per machine</td>
-              </tr>
-              <tr>
-                <td className="py-4 px-6 text-gray-400 whitespace-nowrap">Networking</td>
-                <td className="py-4 px-6">Open port range mapped to each machine</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section className="py-24 bg-[#050505] border-y border-white/[0.06]">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Verification</h2>
-            <p className="text-gray-400 text-balance">
-              Satisfying the criteria below aligns your host with marketplace quality standards and improves visibility to renters.
-            </p>
-          </div>
-          <ul className="space-y-4">
-            {verificationItems.map((item) => (
-              <li
-                key={item}
-                className="flex items-start gap-4 rounded-xl border border-white/[0.06] bg-[#0a0a0a] px-5 py-4 shadow-lg"
-              >
-                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/40">
-                  <CheckIcon className="h-4 w-4" />
-                </span>
-                <span className="text-gray-200 text-sm md:text-base leading-relaxed pt-0.5">{item}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      <section className="py-24 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">Illustrative earnings</h2>
-          <p className="text-gray-400">
-            Example list rates and gross monthly estimates at sustained utilization. Actual payouts depend on the rates you set, tier fees,
-            and booked hours.
-          </p>
-        </div>
-
-        <div className="bg-[#0a0a0a] border border-white/[0.06] rounded-2xl p-8 md:p-10 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-[50px] -z-10" />
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm md:text-base min-w-[520px]">
-              <thead>
-                <tr className="border-b border-white/[0.06]">
-                  <th className="py-3 pr-4 font-semibold text-white">GPU</th>
-                  <th className="py-3 pr-4 font-semibold text-white">Example rate</th>
-                  <th className="py-3 font-semibold text-white">Est. monthly gross</th>
-                </tr>
-              </thead>
-              <tbody className="text-gray-300">
-                {earningsRows.map((row) => (
-                  <tr key={row.gpu} className="border-b border-white/[0.06] last:border-0">
-                    <td className="py-4 pr-4 font-medium text-white">{row.gpu}</td>
-                    <td className="py-4 pr-4">
-                      <span className="text-primary font-bold">{formatInr(row.rate)}</span>
-                      <span className="text-gray-500"> / hr</span>
-                    </td>
-                    <td className="py-4 font-mono text-white">{formatInr(row.monthly)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <p className="mt-6 text-sm text-gray-500">
-            Monthly estimate uses {hoursPerDay} hours of bookings per day for {daysPerMonth} days ({monthlyHours} hours). Platform fees follow
-            your tier.
-          </p>
-        </div>
-      </section>
-
-      <section className="py-24 bg-[#050505] border-y border-white/[0.06]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Provider types</h2>
-            <p className="text-gray-400">
-              Individual hosts and enterprise fleets use the same marketplace primitives: verified listings, optional GPU slicing, and
-              contract-backed rentals.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-[#0a0a0a] border border-white/[0.06] p-10 rounded-2xl shadow-2xl hover:border-primary/50 transition-colors">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center border border-blue-500/30">
-                  <svg className="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-2xl font-bold text-white">Individual providers</h3>
-              </div>
-              <p className="text-gray-400 mb-8 leading-relaxed">
-                Offer workstations or small servers with dedicated GPUs. Install the agent, pass verification, and publish rates and
-                availability. Pause or withdraw offers when you need the hardware locally.
-              </p>
-              <ul className="space-y-4 text-sm text-gray-300">
-                <li className="flex items-start gap-3">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/40">
-                    <CheckIcon className="h-3 w-3" />
-                  </span>
-                  Streamlined agent installation
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/40">
-                    <CheckIcon className="h-3 w-3" />
-                  </span>
-                  Workloads isolated from your host environment
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/40">
-                    <CheckIcon className="h-3 w-3" />
-                  </span>
-                  Control when the machine is available for rent
-                </li>
-              </ul>
+          <div className={`flex gap-10 mb-12 anim-fadeUp delay-3 ${heroSection.visible ? 'visible' : ''}`}>
+            <div>
+              <div className="text-[32px] font-bold tracking-[-0.02em]"><CountUp target={300} suffix="%" /></div>
+              <div className="text-[11px] text-[#444] uppercase tracking-[1px] font-medium mt-1">Annual ROI</div>
             </div>
-
-            <div className="bg-[#0a0a0a] border border-white/[0.06] p-10 rounded-2xl shadow-2xl hover:border-primary/50 transition-colors">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center border border-purple-500/30">
-                  <svg className="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-2xl font-bold text-white">Enterprise / datacenter</h3>
-              </div>
-              <p className="text-gray-400 mb-8 leading-relaxed">
-                Deploy the worker stack on GPU clusters and co-located infrastructure. Register multi-GPU nodes, tune offers for duration and
-                interruptible pricing, and serve multiple concurrent renters per machine with slicing where configured.
-              </p>
-              <ul className="space-y-4 text-sm text-gray-300">
-                <li className="flex items-start gap-3">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/40">
-                    <CheckIcon className="h-3 w-3" />
-                  </span>
-                  Native Linux deployment paths
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/40">
-                    <CheckIcon className="h-3 w-3" />
-                  </span>
-                  Multi-GPU topologies including PCIe and NVLink
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/40">
-                    <CheckIcon className="h-3 w-3" />
-                  </span>
-                  SLA-oriented options for high-uptime fleets
-                </li>
-              </ul>
+            <div>
+              <div className="text-[32px] font-bold tracking-[-0.02em]">4<span className="text-[#00e67a] font-extrabold">mo</span></div>
+              <div className="text-[11px] text-[#444] uppercase tracking-[1px] font-medium mt-1">Break-even</div>
+            </div>
+            <div>
+              <div className="text-[32px] font-bold tracking-[-0.02em]">$2.1<span className="text-[#00e67a] font-extrabold">B</span></div>
+              <div className="text-[11px] text-[#444] uppercase tracking-[1px] font-medium mt-1">Market demand</div>
             </div>
           </div>
-        </div>
-      </section>
-
-      <section className="py-24 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h2 className="text-3xl font-bold mb-6">Security and isolation</h2>
-        <p className="text-gray-400 mb-12 max-w-2xl mx-auto">
-          Renters receive only the resources and network scope defined in their contract. Isolation holds when multiple tenants share GPUs on
-          the same host.
-        </p>
-
-        <div className="grid sm:grid-cols-3 gap-6 text-left">
-          <div className="bg-[#0a0a0a] border border-white/[0.06] p-8 rounded-2xl shadow-xl hover:border-white/20 transition-colors">
-            <h4 className="font-bold text-white mb-4 text-lg">Container isolation</h4>
-            <p className="text-sm text-gray-400 leading-relaxed">
-              Workloads run inside containers with GPU access via the NVIDIA Container Toolkit. Renters do not receive privileged access to
-              the host operating system.
-            </p>
-          </div>
-          <div className="bg-[#0a0a0a] border border-white/[0.06] p-8 rounded-2xl shadow-xl hover:border-white/20 transition-colors">
-            <h4 className="font-bold text-white mb-4 text-lg">Secure connectivity</h4>
-            <p className="text-sm text-gray-400 leading-relaxed">
-              Session traffic uses managed secure tunnels so renters cannot browse or enumerate your local area network.
-            </p>
-          </div>
-          <div className="bg-[#0a0a0a] border border-white/[0.06] p-8 rounded-2xl shadow-xl hover:border-white/20 transition-colors">
-            <h4 className="font-bold text-white mb-4 text-lg">Scoped storage</h4>
-            <p className="text-sm text-gray-400 leading-relaxed">
-              Renter storage is limited to provisioned volumes. Host filesystems and unassigned volumes remain outside renter reach.
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-16 flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            href="/host/setup"
-            className="bg-primary hover:bg-primary-dark text-black font-bold py-3 px-8 rounded-lg text-lg transition-all shadow-[0_0_20px_rgba(0,255,136,0.3)] hover:shadow-[0_0_30px_rgba(0,255,136,0.5)] text-center"
-          >
-            Start Providing
-          </Link>
-          <Link
-            href="/host/datacenter-apply"
-            className="bg-[#0a0a0a] hover:bg-white/[0.08] border border-white/[0.06] text-white font-medium py-3 px-8 rounded-lg text-lg transition-all text-center"
-          >
-            Apply for Enterprise
-          </Link>
-        </div>
-      </section>
-
-      {/* REFERRAL */}
-      <section className="py-12 border-t border-white/[0.06]">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-gray-300 text-sm md:text-base">
-            <span className="font-semibold text-white">Know other providers?</span>{' '}
-            Refer them and earn bonus credits when they list hardware.{' '}
-            <Link href="/invite" className="text-primary font-medium hover:underline">
-              Get your referral link →
+          <div className={`anim-fadeUp delay-4 ${heroSection.visible ? 'visible' : ''}`}>
+            <Link href="/host/setup" className="inline-flex items-center gap-2.5 bg-[#00e67a] text-black font-bold text-[14px] py-3.5 px-8 rounded-[10px] transition-all hover:-translate-y-0.5 hover:shadow-[0_16px_40px_rgba(0,230,122,0.15)] active:scale-[0.98]">
+              Start Generating Yield
+              <span className="transition-transform group-hover:translate-x-1">&rarr;</span>
             </Link>
+          </div>
+        </div>
+
+        <div className="relative hidden lg:block border-l border-white/[0.05]">
+          <div className={`absolute inset-0 anim-fadeIn delay-3 ${heroSection.visible ? 'visible' : ''}`}>
+            <Image
+              src="/images/host/host-hero.png"
+              alt="GPU chip as monumental architecture"
+              fill
+              className="object-cover object-center"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-[#060606]/80" />
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════ YIELD — HORIZONTAL SCROLL TRACK ═══════ */}
+      <section ref={yieldSection.ref} className="py-24 lg:py-32 border-t border-white/[0.05]">
+        <div className="pl-6 sm:pl-10 lg:pl-16 xl:pl-20 mb-12">
+          <h2 className={`text-[clamp(28px,4vw,48px)] font-bold leading-[1.15] tracking-tight mb-4 anim-fadeUp ${yieldSection.visible ? 'visible' : ''}`}>
+            Your hardware, generating <span className="text-[#00e67a]">yield</span>.
+          </h2>
+          <p className={`text-[15px] text-[#777] font-light leading-[1.6] max-w-[480px] anim-fadeUp delay-1 ${yieldSection.visible ? 'visible' : ''}`}>
+            Market rates from the Velocity marketplace. Projected yield assumes 14 hours of daily utilization.
           </p>
+        </div>
+
+        <div className={`flex gap-5 overflow-x-auto pl-6 sm:pl-10 lg:pl-16 xl:pl-20 pr-10 pb-4 snap-x snap-mandatory scrollbar-hide anim-fadeUp delay-2 ${yieldSection.visible ? 'visible' : ''}`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          {YIELD_DATA.map((card, i) => (
+            <div
+              key={card.gpu}
+              className="flex-none w-[272px] snap-start bg-[#0c0c0c] border border-white/[0.05] rounded-[20px] p-7 transition-all hover:border-[#00e67a]/15 hover:-translate-y-1"
+              style={{ animationDelay: `${0.1 * i}s` }}
+            >
+              <div className="w-full h-24 rounded-xl bg-gradient-to-br from-[#00e67a]/[0.06] to-[#00e67a]/[0.02] border border-[#00e67a]/[0.08] mb-5 flex items-center justify-center overflow-hidden relative">
+                <Image
+                  src="/images/host/host-gpus-composite.png"
+                  alt={card.gpu}
+                  fill
+                  className="object-cover opacity-40"
+                  loading="lazy"
+                />
+              </div>
+              <div className="text-[12px] font-semibold text-[#777] tracking-[0.5px] mb-1">{card.gpu}</div>
+              <div className="text-[11px] text-[#444] mb-5">Hardware cost ~{card.hwCost}</div>
+              <div className="text-[36px] font-extrabold tracking-[-0.03em] leading-none">
+                ${card.rate.toFixed(2)}<span className="text-[14px] font-normal text-[#444]">/hr</span>
+              </div>
+              <div className="h-px bg-white/[0.05] my-5" />
+              <div className="flex justify-between items-baseline mb-3">
+                <span className="text-[11px] text-[#444] uppercase tracking-[1px] font-medium">Monthly</span>
+                <span className="text-[22px] font-bold text-[#00e67a] tracking-[-0.02em]">${card.monthly}</span>
+              </div>
+              <div className="flex justify-between text-[12px] mb-1.5">
+                <span className="text-[#444]">Break-even</span>
+                <span className="text-white font-semibold">{card.breakEven}</span>
+              </div>
+              <div className="flex justify-between text-[12px]">
+                <span className="text-[#444]">Annual ROI</span>
+                <span className="text-white font-semibold">{card.roi}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ═══════ THESIS — EDITORIAL ZIGZAG ═══════ */}
+      <section className="border-t border-white/[0.05]">
+        {/* Row 1 */}
+        <div ref={thesisSection1.ref} className="max-w-[1100px] mx-auto px-6 sm:px-10 lg:px-16 py-24 lg:py-32">
+          <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-12 lg:gap-20 items-center">
+            <div>
+              <h2 className={`text-[clamp(28px,4vw,48px)] font-bold leading-[1.2] tracking-tight mb-5 anim-fadeRight ${thesisSection1.visible ? 'visible' : ''}`}>
+                The scarcest resource in technology.
+              </h2>
+              <p className={`text-[16px] font-light text-[#777] leading-[1.7] max-w-[480px] mb-8 anim-fadeRight delay-1 ${thesisSection1.visible ? 'visible' : ''}`}>
+                AI model complexity doubles every six months. Enterprise inference costs now exceed training costs. GPU supply cannot keep pace with demand. Every idle card is yield left uncollected.
+              </p>
+              <div className={`flex gap-4 anim-fadeRight delay-2 ${thesisSection1.visible ? 'visible' : ''}`}>
+                <div className="px-4 py-3 border border-white/[0.05] rounded-xl bg-white/[0.02]">
+                  <div className="text-[20px] font-bold tracking-[-0.02em]">10<span className="text-[#00e67a]">x</span></div>
+                  <div className="text-[10px] text-[#444] uppercase tracking-[0.5px] font-medium mt-1">Demand growth / yr</div>
+                </div>
+                <div className="px-4 py-3 border border-white/[0.05] rounded-xl bg-white/[0.02]">
+                  <div className="text-[20px] font-bold tracking-[-0.02em]">$500<span className="text-[#00e67a]">B</span></div>
+                  <div className="text-[10px] text-[#444] uppercase tracking-[0.5px] font-medium mt-1">AI infra spend by 2028</div>
+                </div>
+              </div>
+            </div>
+            <div className={`relative aspect-[4/3] rounded-[24px] overflow-hidden border border-white/[0.05] bg-[#0c0c0c] anim-fadeLeft delay-2 ${thesisSection1.visible ? 'visible' : ''}`}>
+              <Image
+                src="/images/host/host-thesis-demand.png"
+                alt="AI compute demand growth curve"
+                fill
+                className="object-cover"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Row 2 — reversed */}
+        <div ref={thesisSection2.ref} className="max-w-[1100px] mx-auto px-6 sm:px-10 lg:px-16 pb-24 lg:pb-32">
+          <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-12 lg:gap-20 items-center">
+            <div className={`relative aspect-[4/3] rounded-[24px] overflow-hidden border border-white/[0.05] bg-[#0c0c0c] order-2 lg:order-1 anim-fadeRight delay-1 ${thesisSection2.visible ? 'visible' : ''}`}>
+              <Image
+                src="/images/host/host-thesis-racks.png"
+                alt="Server racks with one activated GPU"
+                fill
+                className="object-cover"
+                loading="lazy"
+              />
+            </div>
+            <div className="order-1 lg:order-2">
+              <h2 className={`text-[clamp(28px,4vw,48px)] font-bold leading-[1.2] tracking-tight mb-5 anim-fadeLeft ${thesisSection2.visible ? 'visible' : ''}`}>
+                85% of GPUs sit idle right now.
+              </h2>
+              <p className={`text-[16px] font-light text-[#777] leading-[1.7] max-w-[480px] mb-8 anim-fadeLeft delay-1 ${thesisSection2.visible ? 'visible' : ''}`}>
+                Data centers, gaming rigs, workstations. Billions of dollars in hardware generating zero return. Velocity turns idle silicon into a revenue-generating asset.
+              </p>
+              <div className={`flex gap-4 anim-fadeLeft delay-2 ${thesisSection2.visible ? 'visible' : ''}`}>
+                <div className="px-4 py-3 border border-white/[0.05] rounded-xl bg-white/[0.02]">
+                  <div className="text-[20px] font-bold tracking-[-0.02em]">85<span className="text-[#00e67a]">%</span></div>
+                  <div className="text-[10px] text-[#444] uppercase tracking-[0.5px] font-medium mt-1">GPUs idle globally</div>
+                </div>
+                <div className="px-4 py-3 border border-white/[0.05] rounded-xl bg-white/[0.02]">
+                  <div className="text-[20px] font-bold tracking-[-0.02em]">2<span className="text-[#00e67a]">x</span></div>
+                  <div className="text-[10px] text-[#444] uppercase tracking-[0.5px] font-medium mt-1">AI budgets / year</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════ STEPS — NUMBERED LIST ═══════ */}
+      <section ref={stepsSection.ref} className="border-t border-white/[0.05] py-24 lg:py-32">
+        <div className="max-w-[860px] mx-auto px-6 sm:px-10 lg:px-16">
+          <h2 className={`text-[clamp(28px,4vw,48px)] font-bold leading-[1.2] tracking-tight mb-16 anim-fadeUp ${stepsSection.visible ? 'visible' : ''}`}>
+            From idle to earning in five minutes.
+          </h2>
+
+          {[
+            { title: 'Install the agent', body: 'One command. Auto-detects your GPU model, CUDA version, and network topology. No Docker config needed.', code: <span>$ curl -sSL <span className="text-[#00e67a] font-semibold">velocity.cloud/install</span> | bash</span> },
+            { title: 'Set your price, or let us', body: 'Auto-pricing sets the optimal market rate to maximize utilization. Override anytime with your own rate.', code: <span>Market rate: <span className="text-[#00e67a] font-semibold">$0.55</span>/GPU/hr &middot; Auto-pricing ON</span> },
+            { title: 'Earn yield', body: 'Per-second billing. Automated payouts. Track everything from your dashboard. Level up for lower fees.', code: <span>Monthly projected: <span className="text-[#00e67a] font-semibold">$231</span> &middot; Tier: Bronze (15%)</span> },
+          ].map((step, i) => (
+            <div
+              key={step.title}
+              className={`grid grid-cols-1 md:grid-cols-[60px_1fr_1fr] gap-6 items-start py-8 border-t border-white/[0.05] anim-fadeUp ${stepsSection.visible ? 'visible' : ''}`}
+              style={{ animationDelay: `${0.15 * (i + 1)}s` }}
+            >
+              <div className="text-[32px] font-extrabold text-[#00e67a]/20 leading-none pt-1">
+                {String(i + 1).padStart(2, '0')}
+              </div>
+              <div>
+                <h3 className="text-[20px] font-semibold mb-2">{step.title}</h3>
+                <p className="text-[14px] font-light text-[#777] leading-[1.6]">{step.body}</p>
+              </div>
+              <div className="text-[12px] text-[#444] bg-white/[0.02] border border-white/[0.05] rounded-lg px-4 py-3 self-center">
+                {step.code}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ═══════ TIERS — HORIZONTAL BAR ═══════ */}
+      <section ref={tiersSection.ref} className="border-t border-white/[0.05] py-24 lg:py-32">
+        <div className="max-w-[960px] mx-auto px-6 sm:px-10 lg:px-16">
+          <h2 className={`text-[clamp(28px,4vw,48px)] font-bold leading-[1.2] tracking-tight mb-3 anim-fadeUp ${tiersSection.visible ? 'visible' : ''}`}>
+            Compound your returns.
+          </h2>
+          <p className={`text-[15px] text-[#777] font-light max-w-[500px] mb-12 anim-fadeUp delay-1 ${tiersSection.visible ? 'visible' : ''}`}>
+            Your effective yield increases as you earn XP. Platform fees drop from 15% to 5% as you level up.
+          </p>
+
+          <div className={`flex rounded-2xl overflow-hidden border border-white/[0.05] bg-[#0c0c0c] anim-fadeUp delay-2 ${tiersSection.visible ? 'visible' : ''}`}>
+            {TIERS.map((tier, i) => (
+              <div
+                key={tier.name}
+                className={`flex-1 py-6 px-4 text-center transition-colors hover:bg-[#00e67a]/[0.03] ${i < TIERS.length - 1 ? 'border-r border-white/[0.05]' : ''}`}
+              >
+                <div className="text-[12px] font-semibold text-white mb-1.5">{tier.name}</div>
+                <div className="text-[28px] font-extrabold text-[#00e67a] leading-none tracking-[-0.03em]">{tier.fee}</div>
+                <div className="text-[10px] text-[#444] mt-1 font-medium">platform fee</div>
+                <div className="text-[11px] text-[#444] mt-2.5 font-medium">{tier.xp} XP</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════ FINAL CTA ═══════ */}
+      <section ref={ctaSection.ref} className="min-h-[70dvh] flex flex-col items-center justify-center text-center px-6 border-t border-white/[0.05] relative overflow-hidden">
+        <div className="absolute bottom-[-100px] left-1/2 -translate-x-1/2 w-[700px] h-[350px] pointer-events-none" style={{ background: 'radial-gradient(ellipse, rgba(0,230,122,0.05) 0%, transparent 70%)' }} />
+
+        <h2 className={`text-[clamp(36px,6vw,72px)] font-extrabold leading-[1.1] tracking-tight max-w-[600px] mb-5 relative z-10 anim-fadeUp ${ctaSection.visible ? 'visible' : ''}`}>
+          Every idle hour is <span className="text-[#00e67a]">yield forgone.</span>
+        </h2>
+        <p className={`text-[16px] text-[#777] font-light max-w-[400px] leading-[1.6] mb-9 relative z-10 anim-fadeUp delay-1 ${ctaSection.visible ? 'visible' : ''}`}>
+          Plug in your GPU. Start earning in five minutes. Join the infrastructure layer of the AI economy.
+        </p>
+        <div className={`flex gap-4 relative z-10 anim-fadeUp delay-2 ${ctaSection.visible ? 'visible' : ''}`}>
+          <Link href="/host/setup" className="inline-flex items-center gap-2.5 bg-[#00e67a] text-black font-bold text-[14px] py-3.5 px-8 rounded-[10px] transition-all hover:-translate-y-0.5 hover:shadow-[0_16px_40px_rgba(0,230,122,0.15)] active:scale-[0.98]">
+            Start Generating Yield &rarr;
+          </Link>
+          <Link href="/host/datacenter-apply" className="inline-flex items-center gap-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] text-gray-300 hover:text-white font-medium text-[14px] py-3.5 px-8 rounded-[10px] transition-all hover:-translate-y-0.5">
+            Enterprise Fleets
+          </Link>
         </div>
       </section>
     </main>

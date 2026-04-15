@@ -121,7 +121,7 @@ export default function HostSetupPage() {
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-6 h-6 rounded bg-primary flex items-center justify-center font-bold text-black text-xs">V</div>
-            <span className="font-bold">Velocity Infra</span>
+            <span className="font-bold">Velocity</span>
           </Link>
           <div className="text-sm text-gray-400">Host Setup</div>
         </div>
@@ -129,7 +129,7 @@ export default function HostSetupPage() {
 
       <div className="max-w-4xl mx-auto px-6 py-12">
         <h1 className="text-3xl font-bold mb-2">Connect your machine</h1>
-        <p className="text-gray-400 mb-10">Five quick steps to get your GPU earning on Velocity Infra.</p>
+        <p className="text-gray-400 mb-10">Five quick steps to get your GPU earning on Velocity.</p>
 
         {/* Step indicator */}
         <div className="flex items-center gap-2 mb-12">

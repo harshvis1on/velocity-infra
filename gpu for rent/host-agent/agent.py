@@ -72,7 +72,9 @@ def verify_job_signature(job: dict) -> bool:
     and storing it in job['signature']. If JOB_SIGNING_SECRET is not set, skip verification.
     """
     if not JOB_SIGNING_SECRET:
-        return True
+        log.error("[SECURITY] VELOCITY_JOB_SECRET is not set — rejecting all jobs. "
+                  "Set this env var to the same value configured on the API server.")
+        return False
 
     sig = job.get("signature")
     if not sig:
@@ -1192,11 +1194,28 @@ def check_maintenance():
                 log.warning("Could not set maintenance_warning on instances: %s", exc)
 
 
+def _is_machine_paused() -> bool:
+    """Check if this machine's status is 'paused' — skip new job pickup."""
+    try:
+        res = requests.get(
+            f"{SUPABASE_URL}/rest/v1/machines?id=eq.{MACHINE_ID}&select=status",
+            headers=_supabase_headers(), timeout=10,
+        )
+        if res.status_code == 200:
+            rows = res.json()
+            if rows and rows[0].get("status") == "paused":
+                return True
+    except requests.RequestException:
+        pass
+    return False
+
+
 def check_for_jobs():
     """Poll Supabase for instance lifecycle events assigned to this machine."""
     headers = _supabase_headers()
 
-    # 1. Instances to create (status=creating)
+    # 1. Instances to create (status=creating) — skip if machine is paused
+    paused = _is_machine_paused()
     try:
         res = requests.get(
             f"{SUPABASE_URL}/rest/v1/instances?machine_id=eq.{MACHINE_ID}&status=eq.creating",
@@ -1204,6 +1223,9 @@ def check_for_jobs():
         )
         if res.status_code == 200:
             for job in res.json():
+                if paused:
+                    log.info("[PAUSED] Machine is paused — skipping new job %s", job["id"][:8])
+                    continue
                 if not verify_job_signature(job):
                     _patch_instance(job["id"], {"status": "error"})
                     log_abuse_event(job["id"], "invalid_signature", "critical", "Job rejected: invalid or missing HMAC signature")
@@ -1563,15 +1585,36 @@ def destroy_container(job):
 
 def signal_handler(sig, frame):
     log.info("Received signal %s – shutting down gracefully…", sig)
+
+    # 1. Stop all running containers
+    containers = get_running_containers()
+    for name, cid in containers:
+        instance_id = name.replace("velocity-pod-", "")
+        log.info("Stopping container %s (instance %s)…", name, instance_id)
+        try:
+            subprocess.run(["docker", "stop", "-t", "10", cid], capture_output=True, timeout=30)
+            subprocess.run(["docker", "rm", "-f", cid], capture_output=True, timeout=10)
+        except subprocess.SubprocessError as e:
+            log.warning("Failed to stop container %s: %s", cid, e)
+
+        # Remove tunnel ingress for this instance
+        try:
+            _remove_named_tunnel_ingress(instance_id)
+        except Exception as e:
+            log.warning("Failed to remove tunnel for %s: %s", instance_id, e)
+
+    # 2. Set machine status to offline
     try:
         requests.patch(
             f"{SUPABASE_URL}/rest/v1/machines?id=eq.{MACHINE_ID}",
             headers=_supabase_headers(content_type=True),
-            json={"daemon_version": f"{AGENT_VERSION}-offline"},
+            json={"status": "offline", "daemon_version": f"{AGENT_VERSION}-offline"},
             timeout=5,
         )
     except requests.RequestException:
         pass
+
+    log.info("Graceful shutdown complete. Stopped %d containers.", len(containers))
     sys.exit(0)
 
 def run_self_test():

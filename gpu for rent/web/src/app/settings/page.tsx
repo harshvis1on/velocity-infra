@@ -1,10 +1,9 @@
 import { createClient } from '@/utils/supabase/server';
-import Link from 'next/link';
 import SSHKeyManager from './SSHKeyManager';
 import ApiKeyManager from './ApiKeyManager';
 import ProfileDropdown from '../console/ProfileDropdown';
-
 import ConsoleSidebar from '../components/ConsoleSidebar';
+import SettingsTabs from './SettingsTabs';
 
 export default async function SettingsPage() {
   const supabase = createClient()
@@ -40,54 +39,37 @@ export default async function SettingsPage() {
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
 
   return (
-    <div className="min-h-screen flex bg-[#050505] text-white font-sans">
+    <div className="min-h-screen flex bg-[#060606] text-white" style={{ fontFamily: 'var(--font-sans, Outfit, sans-serif)' }}>
       <ConsoleSidebar 
         role={profile?.role || 'renter'} 
         walletBalance={walletBalance} 
         userEmail={user?.email} 
-        userPhone={profile?.phone} 
+        userPhone={profile?.phone}
+        referralCode={profile?.referral_code}
       />
 
-      {/* MAIN CONTENT */}
       <main className="flex-1 flex flex-col h-screen overflow-y-auto">
-        <header className="h-16 flex items-center justify-between px-8 border-b border-white/10 bg-[#050505] sticky top-0 z-10">
-          <h1 className="text-xl font-bold">Settings</h1>
+        <header className="h-14 flex items-center justify-between px-8 border-b border-white/[0.06] bg-[#060606]/80 backdrop-blur-xl sticky top-0 z-10">
+          <h1 className="text-sm font-medium text-white">Settings</h1>
           <div className="flex items-center gap-4">
             <ProfileDropdown userName={userName} email={user?.email || ''} />
           </div>
         </header>
 
-        <div className="p-8 max-w-5xl mx-auto w-full">
-          
-          <div className="grid md:grid-cols-2 gap-6 mb-12">
-            {/* ACCOUNT SETTINGS */}
-            <div className="bg-white/5 border border-white/10 p-6 rounded-xl">
-              <h2 className="text-xl font-bold mb-6">Account</h2>
-              <div className="space-y-4">
-                <div>
-                  <div className="text-xs text-gray-500 mb-1">Email Address</div>
-                  <div className="text-sm font-medium">{user?.email}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-500 mb-1">User ID</div>
-                  <div className="text-sm font-mono text-gray-400">{user?.id}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-500 mb-1">Account Role</div>
-                  <div className="text-sm font-medium capitalize">{profile?.role || 'Renter'}</div>
-                </div>
-                <div className="pt-4 border-t border-white/10">
-                  <p className="text-xs text-gray-500">Need to delete your account? <a href="mailto:support@velocityinfra.in" className="text-red-400 hover:text-red-300 transition-colors">Contact support</a>.</p>
-                </div>
-              </div>
+        <div className="p-8 max-w-4xl mx-auto w-full">
+          <SettingsTabs
+            profile={profile}
+            userEmail={user?.email || ''}
+            userId={user?.id || ''}
+          />
+
+          <div className="mt-8 pt-8 border-t border-white/[0.06]">
+            <div className="text-[10px] text-gray-600 uppercase tracking-[0.15em] mb-6">Security & Keys</div>
+            <div className="grid md:grid-cols-2 gap-4 mb-8">
+              <ApiKeyManager />
             </div>
-
-            {/* API KEYS */}
-            <ApiKeyManager />
+            <SSHKeyManager initialKeys={sshKeys} />
           </div>
-
-          <SSHKeyManager initialKeys={sshKeys} />
-
         </div>
       </main>
     </div>

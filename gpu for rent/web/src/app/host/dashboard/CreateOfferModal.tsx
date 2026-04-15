@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { createClient } from '@/utils/supabase/client';
+import { useState, useEffect } from 'react';
 
 interface Machine {
   id: string;
@@ -11,27 +10,21 @@ interface Machine {
   offers?: any[];
 }
 
-const SUGGESTED_PRICES: Record<string, number> = {
-  'RTX 4090': 40,
-  'RTX 3090': 25,
-  'RTX 3080': 20,
-  'RTX 3070': 15,
-  'RTX 4080': 35,
-  'RTX 4070': 28,
-  'A100': 95,
-  'A10': 45,
-  'A6000': 55,
-  'H100': 180,
-  'L40S': 60,
-  'L40': 55,
-  'L4': 25,
-  'T4': 12,
-  'V100': 18,
+interface MarketPrice {
+  suggested: number;
+  min: number;
+  max: number;
+}
+
+const FALLBACK_PRICES: Record<string, number> = {
+  'RTX 4090': 40, 'RTX 3090': 25, 'RTX 3080': 20, 'RTX 3070': 15,
+  'RTX 4080': 35, 'RTX 4070': 28, 'A100': 95, 'A10': 45, 'A6000': 55,
+  'H100': 180, 'L40S': 60, 'L40': 55, 'L4': 25, 'T4': 12, 'V100': 18,
 };
 
-function getSuggestedPrice(gpuModel: string): number {
+function fallbackPrice(gpuModel: string): number {
   const upper = gpuModel.toUpperCase();
-  for (const [key, price] of Object.entries(SUGGESTED_PRICES)) {
+  for (const [key, price] of Object.entries(FALLBACK_PRICES)) {
     if (upper.includes(key.toUpperCase())) return price;
   }
   return 30;
@@ -47,11 +40,21 @@ export default function CreateOfferModal({ machines }: { machines: Machine[] }) 
   const [machineId, setMachineId] = useState('');
   const [pricePerGpuHr, setPricePerGpuHr] = useState('');
   const [durationDays, setDurationDays] = useState('30');
+  const [autoPrice, setAutoPrice] = useState(true);
 
   const [storagePriceMonth, setStoragePriceMonth] = useState('4.50');
   const [minGpu, setMinGpu] = useState('1');
   const [interruptiblePrice, setInterruptiblePrice] = useState('');
   const [reservedDiscount, setReservedDiscount] = useState('40');
+
+  const [marketPrices, setMarketPrices] = useState<Record<string, MarketPrice>>({});
+
+  useEffect(() => {
+    fetch('/api/market-prices')
+      .then(r => r.json())
+      .then(d => { if (d.prices) setMarketPrices(d.prices); })
+      .catch(() => {});
+  }, []);
 
   const eligibleMachines = machines.filter(m => {
     const activeOffers = m.offers?.filter((o: any) => o.status === 'active') || [];
@@ -59,7 +62,18 @@ export default function CreateOfferModal({ machines }: { machines: Machine[] }) 
   });
 
   const selectedMachine = eligibleMachines.find(m => m.id === machineId);
-  const suggested = selectedMachine ? getSuggestedPrice(selectedMachine.gpu_model) : 0;
+
+  function getSuggested(gpuModel: string): MarketPrice {
+    const upper = gpuModel.toUpperCase();
+    for (const [key, mp] of Object.entries(marketPrices)) {
+      if (upper.includes(key.toUpperCase())) return mp;
+    }
+    const fb = fallbackPrice(gpuModel);
+    return { suggested: fb, min: fb * 0.5, max: fb * 2 };
+  }
+
+  const mp = selectedMachine ? getSuggested(selectedMachine.gpu_model) : null;
+  const suggested = mp?.suggested || 0;
 
   const price = parseFloat(pricePerGpuHr) || 0;
   const reservedPrice = price * (1 - parseInt(reservedDiscount) / 100);
@@ -69,7 +83,7 @@ export default function CreateOfferModal({ machines }: { machines: Machine[] }) 
     setMachineId(id);
     const m = eligibleMachines.find(x => x.id === id);
     if (m) {
-      const s = getSuggestedPrice(m.gpu_model);
+      const s = getSuggested(m.gpu_model).suggested;
       setPricePerGpuHr(String(s));
     }
   };
@@ -81,31 +95,28 @@ export default function CreateOfferModal({ machines }: { machines: Machine[] }) 
     setSuccess(false);
 
     try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
       const offerEndDate = new Date();
       offerEndDate.setDate(offerEndDate.getDate() + parseInt(durationDays));
 
-      const { error: insertError } = await supabase.from('offers').insert({
-        machine_id: machineId,
-        host_id: user.id,
-        price_per_gpu_hr_inr: price,
-        storage_price_per_gb_month_inr: parseFloat(storagePriceMonth),
-        min_gpu: parseInt(minGpu),
-        offer_end_date: offerEndDate.toISOString(),
-        interruptible_min_price_inr: interruptiblePrice ? parseFloat(interruptiblePrice) : null,
-        reserved_discount_factor: parseInt(reservedDiscount) / 100,
-        status: 'active',
+      const res = await fetch('/api/host/offers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          machineId,
+          pricePerGpuHrInr: price,
+          storagePricePerGbMonthInr: parseFloat(storagePriceMonth),
+          minGpu: parseInt(minGpu),
+          offerEndDate: offerEndDate.toISOString(),
+          interruptibleMinPriceInr: interruptiblePrice ? parseFloat(interruptiblePrice) : undefined,
+          reservedDiscountFactor: parseInt(reservedDiscount) / 100,
+          autoPrice,
+        }),
       });
 
-      if (insertError) throw new Error(insertError.message);
-
-      await supabase.from('machines').update({
-        listed: true,
-        price_per_hour_inr: price,
-      }).eq('id', machineId);
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to create offer');
+      }
 
       setSuccess(true);
       setTimeout(() => {
@@ -133,7 +144,7 @@ export default function CreateOfferModal({ machines }: { machines: Machine[] }) 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl w-full max-w-md mx-4 shadow-2xl">
+      <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl w-full max-w-md mx-4 shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-white/10">
           <h2 className="text-lg font-bold">List Machine on Marketplace</h2>
           <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-white text-xl">&times;</button>
@@ -152,7 +163,7 @@ export default function CreateOfferModal({ machines }: { machines: Machine[] }) 
               <option value="">Choose a machine...</option>
               {eligibleMachines.map(m => (
                 <option key={m.id} value={m.id}>
-                  {m.gpu_count}x {m.gpu_model} ({m.vram_gb}GB) — suggested ₹{getSuggestedPrice(m.gpu_model)}/GPU/hr
+                  {m.gpu_count}x {m.gpu_model} ({m.vram_gb}GB)
                 </option>
               ))}
             </select>
@@ -161,10 +172,42 @@ export default function CreateOfferModal({ machines }: { machines: Machine[] }) 
             )}
           </div>
 
-          {/* Price — the ONE main field */}
+          {/* Auto-price toggle */}
+          {machineId && (
+            <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <div className="text-sm font-medium text-white">Auto-pricing</div>
+                  <div className="text-[11px] text-gray-500">Let Velocity set the optimal market price</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = !autoPrice;
+                    setAutoPrice(next);
+                    if (next && suggested) setPricePerGpuHr(String(suggested));
+                  }}
+                  className={`relative w-10 h-5 rounded-full transition-colors ${autoPrice ? 'bg-primary' : 'bg-white/10'}`}
+                >
+                  <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${autoPrice ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                </button>
+              </div>
+
+              {autoPrice && mp && (
+                <div className="text-xs text-gray-400">
+                  Market rate: <span className="text-primary font-mono font-bold">₹{suggested}/GPU/hr</span>
+                  <span className="text-gray-600 ml-2">(range ₹{mp.min}–₹{mp.max})</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Price — manual override */}
           {machineId && (
             <div>
-              <label className="text-xs text-gray-400 mb-1 block">Price per GPU/hr (₹)</label>
+              <label className="text-xs text-gray-400 mb-1 block">
+                {autoPrice ? 'Current price (auto-managed)' : 'Price per GPU/hr (₹)'}
+              </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">₹</span>
                 <input
@@ -172,23 +215,28 @@ export default function CreateOfferModal({ machines }: { machines: Machine[] }) 
                   step="0.50"
                   min="1"
                   value={pricePerGpuHr}
-                  onChange={e => setPricePerGpuHr(e.target.value)}
+                  onChange={e => {
+                    setPricePerGpuHr(e.target.value);
+                    if (autoPrice) setAutoPrice(false);
+                  }}
                   required
-                  className="w-full rounded-lg pl-7 pr-3 py-2.5 bg-black/50 border border-white/10 text-sm text-white focus:border-primary focus:outline-none font-mono text-lg"
+                  className={`w-full rounded-lg pl-7 pr-3 py-2.5 bg-black/50 border text-sm text-white focus:outline-none font-mono text-lg transition-colors ${
+                    autoPrice ? 'border-primary/30 focus:border-primary' : 'border-white/10 focus:border-primary'
+                  }`}
                 />
               </div>
-              <div className="flex items-center gap-2 mt-1.5">
-                <span className="text-xs text-gray-500">Suggested: ₹{suggested}/hr</span>
-                {price !== suggested && (
+              {!autoPrice && suggested > 0 && price !== suggested && (
+                <div className="flex items-center gap-2 mt-1.5">
+                  <span className="text-xs text-gray-500">Market rate: ₹{suggested}/hr</span>
                   <button
                     type="button"
-                    onClick={() => setPricePerGpuHr(String(suggested))}
+                    onClick={() => { setPricePerGpuHr(String(suggested)); setAutoPrice(true); }}
                     className="text-xs text-primary hover:underline"
                   >
-                    Use suggested
+                    Use market rate
                   </button>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Price preview */}
               {price > 0 && (

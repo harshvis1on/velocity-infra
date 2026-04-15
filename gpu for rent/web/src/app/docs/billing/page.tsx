@@ -49,13 +49,45 @@ export default function BillingDocsPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Revenue split</h2>
+        <h2 className="text-xl font-semibold text-white">Revenue split (tier-based)</h2>
+        <p className="leading-relaxed">
+          Platform fees depend on the provider&apos;s tier. Higher tiers earn a larger share:
+        </p>
+        <ul className="list-disc space-y-2 pl-5 leading-relaxed">
+          <li><span className="text-white">Bronze:</span> 85% host / 15% platform</li>
+          <li><span className="text-white">Silver:</span> 88% host / 12% platform</li>
+          <li><span className="text-white">Gold:</span> 90% host / 10% platform</li>
+          <li><span className="text-white">Platinum:</span> 93% host / 7% platform</li>
+          <li><span className="text-white">Diamond:</span> 95% host / 5% platform</li>
+        </ul>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold text-white">Free credits</h2>
         <ul className="list-disc space-y-2 pl-5 leading-relaxed">
           <li>
-            <span className="text-white">85%</span> to host wallet
+            <span className="text-white">Signup credits:</span> Every new user receives ₹65 (~1
+            hour RTX 4090) automatically.
           </li>
           <li>
-            <span className="text-white">15%</span> platform fee
+            <span className="text-white">Referral credits:</span> When a referred user rents their
+            first GPU, both the referrer and referee receive ₹65 in credits.
+          </li>
+        </ul>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold text-white">Auto-refunds</h2>
+        <ul className="list-disc space-y-2 pl-5 leading-relaxed">
+          <li>
+            <span className="text-white">Stuck instance:</span> If an instance is stuck in
+            &quot;creating&quot; for over 5 minutes, it is automatically failed and the renter
+            receives a 1-hour compute credit refund.
+          </li>
+          <li>
+            <span className="text-white">Provider failure:</span> If a provider machine goes offline
+            or errors while instances are running, those instances are stopped and renters receive an
+            automatic credit refund.
           </li>
         </ul>
       </section>
@@ -106,13 +138,12 @@ export default function BillingDocsPage() {
         </h2>
         <WarningBox>
           <ul className="list-disc space-y-2 pl-5">
-            <li>Invoice generation / PDF download</li>
+            <li>Invoice PDF download (HTML invoices exist)</li>
             <li>GST return filing integration</li>
             <li>Payout to bank account (wallet-only today)</li>
             <li>Usage analytics / cost breakdown charts</li>
             <li>Budget alerts / spending limits</li>
-            <li>Refund system</li>
-            <li>Credit notes for interrupted instances</li>
+            <li>Credit notes for interrupted instances (auto-refunds exist but no formal credit notes)</li>
           </ul>
         </WarningBox>
       </section>

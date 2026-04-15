@@ -355,6 +355,13 @@ export default function Marketplace({
     })()
   }, [])
 
+  useEffect(() => {
+    const creatingInstances = activeInstances.filter(i => i.status === 'creating')
+    if (creatingInstances.length === 0) return
+    const interval = setInterval(() => router.refresh(), 10000)
+    return () => clearInterval(interval)
+  }, [activeInstances, router])
+
   const availableGpus = useMemo(
     () => Array.from(new Set(offers.map((o) => machineFromOffer(o)?.gpu_model).filter(Boolean))),
     [offers]
@@ -751,8 +758,13 @@ export default function Marketplace({
                             <span className="text-primary font-bold text-xl">⚡</span>
                           </div>
                           <div>
-                            <h3 className="font-bold text-lg mb-1">
+                            <h3 className="font-bold text-lg mb-1 flex items-center gap-2">
                               {m?.gpu_count > 0 ? `${gpus}x ${m?.gpu_model}` : m?.gpu_model}
+                              {inst.provider_instance_id && (
+                                <span className="text-[10px] font-medium text-gray-500 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded-full">
+                                  Cloud
+                                </span>
+                              )}
                             </h3>
                             <p className="text-xs text-gray-400 font-mono">
                               ID: {inst.id.substring(0, 8)} • Started:{' '}
@@ -766,13 +778,17 @@ export default function Marketplace({
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-4">
                           <div className="text-right">
                             <div className="font-mono text-primary font-bold">
                               ₹{hourly.toFixed(2)}/hr
                             </div>
                             <div className="text-xs text-gray-500 capitalize flex items-center gap-1">
-                              {inst.status}
+                              {(inst.status === 'failed' || inst.status === 'error') ? (
+                                <span className="inline-flex items-center gap-0.5 text-red-400 bg-red-400/10 border border-red-400/20 px-1.5 py-0.5 rounded text-[10px] font-bold normal-case">
+                                  {inst.status === 'failed' ? 'Failed' : 'Error'}
+                                </span>
+                              ) : inst.status}
                               {inst.low_balance_alert && (
                                 <span className="inline-flex items-center gap-0.5 text-orange-400 bg-orange-400/10 border border-orange-400/20 px-1.5 py-0.5 rounded text-[10px] font-bold normal-case">
                                   Low Balance
@@ -803,7 +819,7 @@ export default function Marketplace({
                               onClick={() => handleDestroyInstance(inst.id)}
                               className="bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 px-4 py-2 rounded text-sm font-medium transition-colors"
                             >
-                              Destroy
+                              {(inst.status === 'failed' || inst.status === 'error') ? 'Delete' : 'Destroy'}
                             </button>
                           </div>
                         </div>
@@ -822,16 +838,22 @@ export default function Marketplace({
                             </span>
                           </div>
                           <div className="bg-black p-3 rounded border border-white/5 space-y-2">
-                            <div className="flex justify-between">
-                              <span>SSH Command:</span>
-                              <span className="text-white select-all">
-                                {inst.tunnel_url ? (
-                                  `ssh root@${inst.tunnel_url.replace('https://', '')} -p 443`
-                                ) : (
-                                  `ssh root@${m?.public_ip || 'pending'} -p ${inst.host_port || 'pending'}`
-                                )}
-                              </span>
-                            </div>
+                            {(() => {
+                              const sshIp = inst.provider_instance_id
+                                ? (m?.public_ip || 'pending')
+                                : (m?.public_ip || 'pending')
+                              const sshPort = inst.host_port || 'pending'
+                              return (
+                                <div className="flex justify-between">
+                                  <span>SSH Command:</span>
+                                  <span className="text-white select-all">
+                                    {inst.tunnel_url
+                                      ? `ssh root@${inst.tunnel_url.replace('https://', '')} -p 443`
+                                      : `ssh root@${sshIp} -p ${sshPort}`}
+                                  </span>
+                                </div>
+                              )
+                            })()}
                             {(inst.launch_mode === 'jupyter' || inst.launch_mode === 'both') &&
                               m?.public_ip &&
                               inst.host_port && (
@@ -863,6 +885,21 @@ export default function Marketplace({
                         <div className="bg-black/80 border border-white/10 rounded-b-xl p-4 text-xs font-mono text-gray-400 -mt-6 pt-8 relative z-10">
                           <div className="flex justify-between items-center">
                             <span className="text-blue-400 animate-pulse">● Pulling Docker image...</span>
+                          </div>
+                        </div>
+                      )}
+                      {(inst.status === 'failed' || inst.status === 'error') && (
+                        <div className="bg-black/80 border border-red-500/20 rounded-b-xl p-4 text-xs font-mono text-gray-400 -mt-6 pt-8 relative z-10">
+                          <div className="flex justify-between items-center">
+                            <span className="text-red-400">
+                              ● Provisioning failed{inst.error_message ? `: ${inst.error_message}` : ''}
+                            </span>
+                            <button
+                              onClick={() => handleDestroyInstance(inst.id)}
+                              className="text-red-400 hover:text-red-300 underline underline-offset-2 transition-colors"
+                            >
+                              Delete
+                            </button>
                           </div>
                         </div>
                       )}

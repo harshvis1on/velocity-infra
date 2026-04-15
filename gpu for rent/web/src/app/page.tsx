@@ -3,21 +3,22 @@
 import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import HeroTerminal from './components/HeroTerminal';
+import dynamic from 'next/dynamic';
+const HeroTerminal = dynamic(() => import('./components/HeroTerminal'), { ssr: false, loading: () => <div className="h-[300px] bg-black/50 rounded-2xl border border-white/5 animate-pulse" /> });
 
 const PRICE_TABLE = [
-  { gpu: 'RTX 4090 24GB', velocity: '₹65', aws: '—', gcp: '—', savings: '—' },
-  { gpu: 'A100 80GB', velocity: '₹150', aws: '₹330', gcp: '₹380', savings: '55%' },
-  { gpu: 'H100 SXM5', velocity: '₹280', aws: '₹600', gcp: '₹700', savings: '53%' },
-  { gpu: 'L40S 48GB', velocity: '₹95', aws: '₹250', gcp: '—', savings: '62%' },
-  { gpu: 'A6000 48GB', velocity: '₹90', aws: '₹220', gcp: '—', savings: '59%' },
+  { gpu: 'RTX 4090 24GB', velocity: '$0.55', aws: '—', gcp: '—', savings: '—' },
+  { gpu: 'A100 80GB', velocity: '$1.20', aws: '$2.80', gcp: '$3.20', savings: '57%' },
+  { gpu: 'H100 SXM5', velocity: '$2.50', aws: '$5.10', gcp: '$5.90', savings: '51%' },
+  { gpu: 'L40S 48GB', velocity: '$0.80', aws: '$2.10', gcp: '—', savings: '62%' },
+  { gpu: 'A6000 48GB', velocity: '$0.70', aws: '$1.85', gcp: '—', savings: '62%' },
 ];
 
 const USE_CASES = [
-  { title: 'Fine-tune an LLM', cmd: 'velocity deploy --gpu A100 --template transformers', time: '~2 hrs', cost: '₹300' },
-  { title: 'Generate images with FLUX', cmd: 'velocity deploy --gpu RTX4090 --template flux', time: '~40 min', cost: '₹40' },
-  { title: 'Run batch inference', cmd: 'velocity deploy --gpu H100 --template vllm', time: '~25 min', cost: '₹120' },
-  { title: 'Train a YOLO detector', cmd: 'velocity deploy --gpu A100 --template pytorch', time: '~3 hrs', cost: '₹450' },
+  { title: 'Fine-tune an LLM', cmd: 'velocity deploy --gpu A100 --template transformers', time: '~2 hrs', cost: '$2.40' },
+  { title: 'Generate images with FLUX', cmd: 'velocity deploy --gpu RTX4090 --template flux', time: '~40 min', cost: '$0.37' },
+  { title: 'Run batch inference', cmd: 'velocity deploy --gpu H100 --template vllm', time: '~25 min', cost: '$1.05' },
+  { title: 'Train a YOLO detector', cmd: 'velocity deploy --gpu A100 --template pytorch', time: '~3 hrs', cost: '$3.60' },
 ];
 
 const fadeUp = {
@@ -63,8 +64,8 @@ export default function Home() {
           </motion.h1>
 
           <motion.p variants={fadeUp} className="mt-6 text-center text-base sm:text-lg md:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
-            Deploy A100s, H100s, and RTX 4090s in seconds. No setup, no DevOps, no surprise bills.
-            Start with free credits — no credit card required.
+            Deploy A100s, H100s, and RTX 4090s in seconds.
+            Pick a GPU, hit deploy, and start building. Free credits on signup.
           </motion.p>
 
           <motion.div variants={fadeUp} className="mt-10 flex justify-center gap-4 flex-col sm:flex-row items-center">
@@ -97,7 +98,7 @@ export default function Home() {
             Same GPUs. Fraction of the price.
           </motion.h2>
           <motion.p variants={fadeUp} className="text-center text-gray-400 max-w-2xl mx-auto mb-12 md:text-lg">
-            Our marketplace connects you directly to GPU providers — no data centre markup, no cloud tax.
+            Our marketplace connects you directly to GPU providers. Skip the data center markup and cloud tax entirely.
           </motion.p>
 
           <motion.div variants={fadeUp} className="bg-[#0a0a0a] border border-white/[0.06] rounded-2xl overflow-x-auto shadow-2xl">
@@ -130,7 +131,7 @@ export default function Home() {
               </tbody>
             </table>
             <div className="px-6 py-4 border-t border-white/[0.04] text-xs text-gray-500 bg-white/[0.01]">
-              Marketplace prices. Billed per minute. Pay with UPI, cards, wire, or crypto.
+              Marketplace prices in USD. Billed per minute. Pay with cards, UPI, wire, or crypto.
             </div>
           </motion.div>
         </motion.div>
@@ -146,13 +147,13 @@ export default function Home() {
           variants={staggerContainer}
         >
           <motion.h2 variants={fadeUp} className="text-center text-3xl md:text-5xl font-bold mb-4">Deploy a GPU in 30 seconds.</motion.h2>
-          <motion.p variants={fadeUp} className="text-center text-gray-400 mb-16 max-w-xl mx-auto md:text-lg">No Docker. No SSH config. No cloud console. No instance management.</motion.p>
+          <motion.p variants={fadeUp} className="text-center text-gray-400 mb-16 max-w-xl mx-auto md:text-lg">Skip the Docker files, SSH configs, and cloud consoles. Just deploy.</motion.p>
 
           <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
             {[
-              { step: '01', title: 'Pick a GPU', desc: 'Browse real-time availability and pricing. Filter by GPU model, VRAM, or price. Choose a pre-built template or bring your own.', code: 'Browse → A100 80GB at ₹150/hr' },
+              { step: '01', title: 'Pick a GPU', desc: 'Browse real-time availability and pricing. Filter by GPU model, VRAM, or price. Choose a pre-built template or bring your own.', code: 'Browse → A100 80GB at $1.20/hr' },
               { step: '02', title: 'Deploy', desc: 'One click or one command. Your instance is live in under 30 seconds with SSH, Jupyter, and VS Code access.', code: 'velocity deploy --gpu A100' },
-              { step: '03', title: 'Build', desc: 'Full root access. Pre-installed CUDA, PyTorch, TensorFlow. Stop anytime — billed per minute.', code: 'ssh root@gpu-7x2k.velocity.run' },
+              { step: '03', title: 'Build', desc: 'Full root access. Pre-installed CUDA, PyTorch, TensorFlow. Stop anytime, billed per minute.', code: 'ssh root@gpu-7x2k.velocity.run' },
             ].map((item, i) => (
               <motion.div 
                 key={item.step} 
@@ -262,7 +263,7 @@ export default function Home() {
             {[
               { title: 'Isolated containers', desc: 'Sandboxed Docker with nvidia-container-toolkit. Zero host access.' },
               { title: 'Encrypted transfers', desc: 'TLS 1.3 end-to-end. Your data stays private in transit.' },
-              { title: 'Per-minute billing', desc: 'Stop anytime. No lock-in, no surprise bills, no minimums.' },
+              { title: 'Per-minute billing', desc: 'Stop anytime. Pay only for the minutes you actually use.' },
               { title: 'Auto-refund', desc: 'If a provider goes offline, automatic refund + migration.' },
             ].map((f) => (
               <motion.div 
@@ -281,7 +282,7 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* FOR PROVIDERS — secondary */}
+      {/* FOR PROVIDERS — compact teaser */}
       <section className="py-24">
         <motion.div 
           className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8"
@@ -290,47 +291,32 @@ export default function Home() {
           viewport={{ once: true }}
           variants={fadeUp}
         >
-          <div className="bg-[#0a0a0a] border border-white/[0.06] rounded-3xl p-8 md:p-12 lg:p-16 flex flex-col lg:flex-row gap-10 items-center relative overflow-hidden shadow-2xl">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-primary/[0.04] rounded-full blur-[100px] pointer-events-none" />
-            <div className="relative flex-1 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/[0.08] bg-white/[0.03] text-[11px] font-bold tracking-wider text-gray-400 mb-6">
-                FOR PROVIDERS
+          <div className="text-center mb-12">
+            <div className="text-[11px] tracking-[3px] uppercase text-gray-600 font-semibold mb-4">THE NEW ASSET CLASS</div>
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 text-white">Compute generates yield.</h2>
+            <p className="text-gray-400 max-w-lg mx-auto md:text-lg">
+              Your GPU earns revenue 24/7 on the Velocity marketplace. Top providers net $800+/mo per card.
+            </p>
+          </div>
+
+          <div className="flex justify-center gap-4 mb-10 overflow-x-auto pb-2">
+            {[
+              { gpu: 'RTX 4090', rate: '$0.55/hr', yield: '$231/mo' },
+              { gpu: 'A100 80GB', rate: '$1.20/hr', yield: '$504/mo' },
+              { gpu: 'H100 SXM5', rate: '$2.50/hr', yield: '$1,050/mo' },
+            ].map((item) => (
+              <div key={item.gpu} className="flex-none bg-[#0a0a0a] border border-white/[0.06] rounded-xl p-5 text-center hover:border-primary/30 transition-colors min-w-[160px]">
+                <div className="text-[11px] text-gray-500 mb-1.5 font-medium">{item.gpu}</div>
+                <div className="text-lg font-bold text-primary">{item.rate}</div>
+                <div className="text-[10px] text-gray-600 mt-1">{item.yield} yield</div>
               </div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
-                Have GPUs? Earn revenue.
-              </h2>
-              <p className="text-gray-400 text-base md:text-lg leading-relaxed mb-8 max-w-xl mx-auto lg:mx-0">
-                List your hardware on the Velocity marketplace and earn automatically.
-                Level up through Bronze to Diamond tier for lower platform fees and higher earnings.
-              </p>
-              <div className="flex flex-wrap justify-center lg:justify-start items-center gap-3 text-sm text-gray-400 mb-8 font-medium">
-                <span className="flex items-center gap-1.5"><span className="text-lg">🥉</span> 15%</span>
-                <span className="text-white/10">→</span>
-                <span className="flex items-center gap-1.5"><span className="text-lg">🥈</span> 12%</span>
-                <span className="text-white/10">→</span>
-                <span className="flex items-center gap-1.5"><span className="text-lg">🥇</span> 10%</span>
-                <span className="text-white/10">→</span>
-                <span className="flex items-center gap-1.5"><span className="text-lg">💎</span> 7%</span>
-                <span className="text-white/10">→</span>
-                <span className="flex items-center gap-1.5"><span className="text-lg">👑</span> 5%</span>
-              </div>
-              <Link href="/host" className="inline-flex bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] text-white font-bold py-3.5 px-8 rounded-lg text-sm transition-all hover:-translate-y-0.5">
-                Start Earning →
-              </Link>
-            </div>
-            <div className="shrink-0 grid grid-cols-2 gap-4 w-full lg:w-auto">
-              {[
-                { label: 'RTX 4090', earn: '₹28K+/mo' },
-                { label: 'A100 80GB', earn: '₹65K+/mo' },
-                { label: 'H100 SXM5', earn: '₹1.2L+/mo' },
-                { label: 'A6000 48GB', earn: '₹39K+/mo' },
-              ].map((item) => (
-                <div key={item.label} className="bg-black/50 border border-white/[0.06] rounded-xl p-5 text-center hover:border-primary/30 transition-colors">
-                  <div className="text-xs text-gray-500 mb-1 font-medium">{item.label}</div>
-                  <div className="text-base font-mono font-bold text-primary">{item.earn}</div>
-                </div>
-              ))}
-            </div>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Link href="/host" className="inline-flex items-center gap-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-gray-300 hover:text-white font-semibold py-3.5 px-8 rounded-lg text-sm transition-all hover:-translate-y-0.5">
+              See the Full Investment Case &rarr;
+            </Link>
           </div>
         </motion.div>
       </section>
@@ -351,7 +337,7 @@ export default function Home() {
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-emerald-400 to-cyan-400">Start for free.</span>
           </motion.h2>
           <motion.p variants={fadeUp} className="text-gray-400 mb-10 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-            Free credits on signup. No credit card. Deploy your first GPU in under a minute.
+            Free credits on signup. Deploy your first GPU in under a minute.
           </motion.p>
 
           <motion.div variants={fadeUp} className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
@@ -364,7 +350,7 @@ export default function Home() {
           </motion.div>
 
           <motion.p variants={fadeUp} className="text-sm text-gray-600 font-medium">
-            Pay with UPI, cards, wire, or crypto · Per-minute billing · No lock-in
+            Pay with cards, UPI, wire, or crypto · Per-minute billing · Cancel anytime
           </motion.p>
         </motion.div>
       </section>

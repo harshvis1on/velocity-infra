@@ -1,8 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client';
+
+function useInView(threshold = 0.15) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [threshold]);
+  return { ref, visible };
+}
 
 export default function InvitePage() {
   const [referralCode, setReferralCode] = useState('');
@@ -10,14 +26,34 @@ export default function InvitePage() {
   const [stats, setStats] = useState({ invited: 0, creditsEarned: 0 });
   const [loading, setLoading] = useState(true);
 
+  const hero = useInView(0.1);
+  const howSection = useInView(0.1);
+
   useEffect(() => {
     async function load() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const code = user.id.slice(0, 8).toUpperCase();
-        setReferralCode(code);
-      }
+      if (!user) { setLoading(false); return; }
+
+      const { data: profile } = await supabase
+        .from('users')
+        .select('referral_code, referral_credits_earned_inr')
+        .eq('id', user.id)
+        .single();
+
+      const code = profile?.referral_code || user.id.slice(0, 8).toUpperCase();
+      setReferralCode(code);
+
+      const { count } = await supabase
+        .from('referrals')
+        .select('id', { count: 'exact', head: true })
+        .eq('referrer_id', user.id);
+
+      setStats({
+        invited: count || 0,
+        creditsEarned: Number(profile?.referral_credits_earned_inr || 0),
+      });
+
       setLoading(false);
     }
     load();
@@ -34,131 +70,150 @@ export default function InvitePage() {
   };
 
   const shareText = `I'm using Velocity to rent GPUs at 80% off cloud pricing. Sign up with my link and we both get free GPU hours: ${referralLink}`;
-
   const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
   const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(referralLink)}`;
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#050505]">
-        <div className="text-gray-500">Loading...</div>
+      <div className="min-h-[100dvh] flex items-center justify-center bg-[#060606]">
+        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   if (!referralCode) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#050505] px-4">
-        <div className="text-center max-w-md">
-          <div className="text-4xl mb-4">🎁</div>
-          <h1 className="text-2xl font-bold mb-3">Invite friends. Get free GPU hours.</h1>
-          <p className="text-gray-400 text-sm mb-6">Sign in to get your unique referral link and start earning free compute credits.</p>
-          <Link href="/login" className="bg-primary hover:bg-primary-dark text-black font-bold py-3 px-8 rounded-lg text-sm transition-all">
-            Sign In to Continue
-          </Link>
+      <div className="min-h-[100dvh] flex bg-[#060606]">
+        <div className="hidden lg:flex lg:w-[45%] relative flex-col justify-center p-16 overflow-hidden">
+          <div className="absolute inset-0 opacity-[0.03]" style={{
+            backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
+            backgroundSize: '60px 60px',
+          }} />
+          <div className="relative z-10 max-w-md">
+            <h1 className="text-5xl font-extrabold text-white leading-[1.05] tracking-tight mb-6 anim-fadeUp">
+              Share compute.<br /><span className="text-primary">Earn compute.</span>
+            </h1>
+            <p className="text-gray-400 text-lg leading-relaxed anim-fadeUp anim-delay-1">
+              Invite friends to Velocity. When they rent their first GPU, you both earn 1 hour of free compute.
+            </p>
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center px-6 lg:border-l lg:border-white/[0.06]">
+          <div className="text-center max-w-sm">
+            <div className="w-12 h-12 rounded-xl bg-yellow-400/10 flex items-center justify-center text-2xl mx-auto mb-6 anim-fadeUp">🎁</div>
+            <h2 className="text-2xl font-bold mb-3 anim-fadeUp anim-delay-1">Sign in to get your invite link</h2>
+            <p className="text-gray-500 text-sm mb-8 anim-fadeUp anim-delay-2">Create an account or sign in to start earning free GPU hours through referrals.</p>
+            <Link href="/login" className="inline-block bg-primary hover:bg-primary/90 text-black font-bold py-3 px-8 rounded-lg text-sm transition-all active:scale-[0.97] anim-fadeUp anim-delay-3">
+              Sign In to Continue
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#050505] text-white">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
-        <div className="text-center mb-12">
-          <div className="text-5xl mb-4">🎁</div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-3">
-            Invite friends. Both get free GPU hours.
-          </h1>
-          <p className="text-gray-400 max-w-lg mx-auto">
-            Share your referral link. When someone signs up and rents their first GPU,
-            you both receive 1 hour of free RTX 4090 compute.
-          </p>
-        </div>
+    <main className="min-h-[100dvh] bg-[#060606] text-white" style={{ fontFamily: 'var(--font-sans, Outfit, sans-serif)' }}>
+      {/* HERO */}
+      <section ref={hero.ref} className={`pt-32 pb-20 relative ${hero.visible ? '' : 'opacity-0'}`}>
+        <div className="absolute inset-0 opacity-[0.02]" style={{
+          backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
+          backgroundSize: '80px 80px',
+        }} />
 
-        {/* Referral link */}
-        <div className="bg-[#0a0a0a] border border-white/[0.08] rounded-2xl p-6 mb-6">
-          <div className="text-xs text-gray-500 uppercase tracking-wider mb-3 font-bold">Your referral link</div>
-          <div className="flex items-center gap-3">
-            <div className="flex-1 bg-black/50 border border-white/[0.06] rounded-lg px-4 py-3 font-mono text-sm text-gray-300 overflow-x-auto">
-              {referralLink || '...'}
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className={`text-center mb-14 ${hero.visible ? 'anim-fadeUp' : ''}`}>
+            <div className="text-xs uppercase tracking-[0.3em] text-gray-500 mb-4">Referral Program</div>
+            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.05] mb-4">
+              Invite friends.<br /><span className="text-primary">Both earn free GPUs.</span>
+            </h1>
+            <p className="text-gray-500 max-w-md mx-auto">
+              Share your referral link. When someone rents their first GPU, you both receive 1 hour of free RTX 4090 compute.
+            </p>
+          </div>
+
+          {/* Referral link card */}
+          <div className={`border border-white/[0.06] rounded-xl p-6 mb-6 ${hero.visible ? 'anim-fadeUp anim-delay-1' : 'opacity-0'}`}>
+            <div className="text-[10px] text-gray-600 uppercase tracking-[0.15em] mb-3 font-medium">Your Referral Link</div>
+            <div className="flex items-center gap-3">
+              <div className="flex-1 bg-white/[0.03] border border-white/[0.06] rounded-lg px-4 py-3 text-sm text-gray-400 overflow-x-auto scrollbar-hide tabular-nums">
+                {referralLink || '...'}
+              </div>
+              <button
+                onClick={copyLink}
+                className={`shrink-0 font-bold py-3 px-6 rounded-lg text-sm transition-all active:scale-[0.97] ${
+                  copied
+                    ? 'bg-primary/10 text-primary border border-primary/20'
+                    : 'bg-primary hover:bg-primary/90 text-black'
+                }`}
+              >
+                {copied ? 'Copied!' : 'Copy Link'}
+              </button>
             </div>
-            <button
-              onClick={copyLink}
-              className={`shrink-0 font-bold py-3 px-6 rounded-lg text-sm transition-all ${
-                copied
-                  ? 'bg-primary/20 text-primary border border-primary/30'
-                  : 'bg-primary hover:bg-primary-dark text-black'
-              }`}
-            >
-              {copied ? 'Copied!' : 'Copy'}
-            </button>
           </div>
-        </div>
 
-        {/* Share buttons */}
-        <div className="grid grid-cols-3 gap-3 mb-8">
-          <a
-            href={twitterUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] rounded-xl p-4 text-center transition-colors"
-          >
-            <div className="text-xl mb-1">𝕏</div>
-            <div className="text-xs text-gray-500">Twitter</div>
-          </a>
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] rounded-xl p-4 text-center transition-colors"
-          >
-            <div className="text-xl mb-1">💬</div>
-            <div className="text-xs text-gray-500">WhatsApp</div>
-          </a>
-          <a
-            href={linkedinUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] rounded-xl p-4 text-center transition-colors"
-          >
-            <div className="text-xl mb-1">in</div>
-            <div className="text-xs text-gray-500">LinkedIn</div>
-          </a>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-4 mb-12">
-          <div className="bg-[#0a0a0a] border border-white/[0.06] rounded-xl p-5 text-center">
-            <div className="text-3xl font-bold font-mono text-white mb-1">{stats.invited}</div>
-            <div className="text-xs text-gray-500">Friends Invited</div>
-          </div>
-          <div className="bg-[#0a0a0a] border border-white/[0.06] rounded-xl p-5 text-center">
-            <div className="text-3xl font-bold font-mono text-primary mb-1">₹{stats.creditsEarned}</div>
-            <div className="text-xs text-gray-500">Credits Earned</div>
-          </div>
-        </div>
-
-        {/* How it works */}
-        <div className="bg-[#0a0a0a] border border-white/[0.06] rounded-2xl p-6">
-          <h3 className="font-bold text-sm mb-4">How it works</h3>
-          <div className="space-y-4">
+          {/* Share buttons */}
+          <div className={`grid grid-cols-3 gap-3 mb-10 ${hero.visible ? 'anim-fadeUp anim-delay-2' : 'opacity-0'}`}>
             {[
-              { step: '1', text: 'Share your unique referral link with friends or on social media' },
-              { step: '2', text: 'They sign up and get bonus credits on their account' },
-              { step: '3', text: 'When they rent their first GPU, you both earn 1 free GPU hour' },
-              { step: '4', text: 'No limits — invite as many people as you want' },
-            ].map((item) => (
-              <div key={item.step} className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-bold text-primary shrink-0 mt-0.5">
-                  {item.step}
+              { href: twitterUrl, icon: '𝕏', label: 'Twitter' },
+              { href: whatsappUrl, icon: '💬', label: 'WhatsApp' },
+              { href: linkedinUrl, icon: 'in', label: 'LinkedIn' },
+            ].map(item => (
+              <a
+                key={item.label}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="border border-white/[0.06] rounded-xl p-4 text-center hover:border-white/[0.12] transition-all group"
+              >
+                <div className="text-xl mb-1 group-hover:scale-110 transition-transform">{item.icon}</div>
+                <div className="text-[11px] text-gray-600">{item.label}</div>
+              </a>
+            ))}
+          </div>
+
+          {/* Stats */}
+          <div className={`grid grid-cols-2 gap-4 ${hero.visible ? 'anim-fadeUp anim-delay-3' : 'opacity-0'}`}>
+            <div className="border border-white/[0.06] rounded-xl p-6 text-center">
+              <div className="text-3xl font-bold text-white mb-1 tabular-nums">{stats.invited}</div>
+              <div className="text-[11px] text-gray-600 uppercase tracking-wider">Friends Invited</div>
+            </div>
+            <div className="border border-white/[0.06] rounded-xl p-6 text-center">
+              <div className="text-3xl font-bold text-primary mb-1 tabular-nums">₹{stats.creditsEarned}</div>
+              <div className="text-[11px] text-gray-600 uppercase tracking-wider">Credits Earned</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section ref={howSection.ref} className={`py-20 border-t border-white/[0.04] ${howSection.visible ? '' : 'opacity-0'}`}>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className={`text-3xl font-bold mb-10 ${howSection.visible ? 'anim-fadeUp' : ''}`}>
+            How it <span className="text-primary">works</span>
+          </h2>
+          <div className="space-y-6">
+            {[
+              { step: '01', text: 'Share your unique referral link with friends or on social media' },
+              { step: '02', text: 'They sign up and get bonus credits added to their account' },
+              { step: '03', text: 'When they rent their first GPU, you both earn 1 free GPU hour' },
+              { step: '04', text: 'Invite as many people as you want. Unlimited.' },
+            ].map((item, i) => (
+              <div
+                key={item.step}
+                className="flex items-start gap-5 group"
+                style={howSection.visible ? { animation: `fadeUp 0.5s ${0.1 + i * 0.1}s cubic-bezier(0.16,1,0.3,1) both` } : { opacity: 0 }}
+              >
+                <div className="text-xs font-bold text-gray-600 tabular-nums pt-0.5 shrink-0">{item.step}</div>
+                <div className="flex-1 pb-6 border-b border-white/[0.04] group-last:border-0">
+                  <p className="text-sm text-gray-400">{item.text}</p>
                 </div>
-                <p className="text-sm text-gray-400">{item.text}</p>
               </div>
             ))}
           </div>
         </div>
-      </div>
+      </section>
     </main>
   );
 }

@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Velocity — /host Page Creative Direction</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;700&family=Satoshi:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  
+  :root {
+    --bg: #030303;
+    --surface: #0a0a0a;
+    --border: rgba(255,255,255,0.06);
+    --green: #00ff88;
+    --green-dim: rgba(0,255,136,0.15);
+    --text: #ffffff;
+    --text-muted: #888;
+    --text-dim: #555;
+    --serif: 'Instrument Serif', Georgia, serif;
+    --sans: 'Satoshi', -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+  
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    font-weight: 700;
+    font-family: var(--mono);
+  }
+
+  /* ═══════════════════════════════════════════════════ */
+  /* SECTION 1: HERO                                    */
+  /* ═══════════════════════════════════════════════════ */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 80px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 900px;
+    height: 600px;
+    background: radial-gradient(ellipse, rgba(0,255,136,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    animation: breathe 8s ease-in-out infinite;
+  }
+
+  @keyframes breathe {
+    0%, 100% { opacity: 0.4; transform: translateX(-50%) scale(1); }
+    50% { opacity: 0.7; transform: translateX(-50%) scale(1.1); }
+  }
+
+  .hero-overline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 40px;
+    backdrop-filter: blur(8px);
+    background: rgba(255,255,255,0.02);
+    animation: fadeDown 0.8s ease both;
+  }
+  .hero-overline .dot {
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+  @keyframes fadeDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+
+  .hero h1 {
+    font-family: var(--serif);
+    font-size: clamp(48px, 8vw, 120px);
+    font-weight: 400;
+    line-height: 1.0;
+    letter-spacing: -0.02em;
+    max-width: 900px;
+    animation: fadeUp 1s 0.2s ease both;
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: var(--green);
+    position: relative;
+  }
+  .hero h1 em::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--green), transparent);
+    animation: drawLine 1.5s 0.8s ease both;
+  }
+  @keyframes drawLine { from { transform: scaleX(0); transform-origin: left; } to { transform: scaleX(1); } }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
+
+  .hero-sub {
+    font-size: clamp(16px, 2vw, 22px);
+    color: var(--text-muted);
+    max-width: 600px;
+    margin: 32px auto 0;
+    line-height: 1.6;
+    font-weight: 400;
+    animation: fadeUp 1s 0.4s ease both;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 48px;
+    margin-top: 60px;
+    animation: fadeUp 1s 0.6s ease both;
+  }
+  .hero-stat {
+    text-align: center;
+  }
+  .hero-stat .number {
+    font-family: var(--mono);
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--green);
+    line-height: 1;
+  }
+  .hero-stat .unit {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 6px;
+    font-weight: 500;
+  }
+
+  /* ═══════════════════════════════════════════════════ */
+  /* SECTION 2: YIELD TABLE                            */
+  /* ═══════════════════════════════════════════════════ */
+  .yield-section {
+    padding: 120px 24px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  .yield-section h2 {
+    font-family: var(--serif);
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 400;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .yield-section .desc {
+    text-align: center;
+    color: var(--text-muted);
+    max-width: 500px;
+    margin: 0 auto 60px;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .yield-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .yield-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.22,1,0.36,1);
+  }
+  .yield-card:hover {
+    border-color: rgba(0,255,136,0.2);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 40px rgba(0,255,136,0.05);
+  }
+  .yield-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--green-dim), transparent);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .yield-card:hover::before { opacity: 1; }
+
+  .yield-card .gpu-name {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    margin-bottom: 20px;
+  }
+  .yield-card .rate {
+    font-family: var(--mono);
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+  }
+  .yield-card .rate-unit {
+    font-size: 14px;
+    color: var(--text-dim);
+    font-weight: 400;
+  }
+  .yield-card .monthly {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .yield-card .monthly .amount {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--green);
+  }
+  .yield-card .monthly .period {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+  .yield-card .roi-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 14px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    background: rgba(0,255,136,0.08);
+    border: 1px solid rgba(0,255,136,0.15);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--green);
+  }
+
+  /* ═══════════════════════════════════════════════════ */
+  /* SECTION 3: MACRO THESIS                           */
+  /* ═══════════════════════════════════════════════════ */
+  .thesis-section {
+    padding: 120px 24px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .thesis-section::before {
+    content: '';
+    position: absolute;
+    right: -200px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,255,136,0.03), transparent 70%);
+    pointer-events: none;
+  }
+  .thesis-inner {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+  .thesis-left h2 {
+    font-family: var(--serif);
+    font-size: clamp(32px, 4.5vw, 56px);
+    font-weight: 400;
+    line-height: 1.15;
+    margin-bottom: 24px;
+  }
+  .thesis-left p {
+    font-size: 16px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    max-width: 420px;
+  }
+  .thesis-right {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .thesis-stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px 20px;
+    transition: border-color 0.3s;
+  }
+  .thesis-stat:hover { border-color: rgba(0,255,136,0.15); }
+  .thesis-stat .big {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+    line-height: 1;
+  }
+  .thesis-stat .big span { color: var(--green); }
+  .thesis-stat .context {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* ═══════════════════════════════════════════════════ */
+  /* SECTION 4: HOW IT WORKS                           */
+  /* ═══════════════════════════════════════════════════ */
+  .steps-section {
+    padding: 120px 24px;
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .steps-section h2 {
+    font-family: var(--serif);
+    font-size: clamp(36px, 5vw, 56px);
+    font-weight: 400;
+    margin-bottom: 64px;
+  }
+  .steps-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    text-align: left;
+  }
+  .step {
+    position: relative;
+    padding: 32px 24px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%);
+    transition: all 0.3s;
+  }
+  .step:hover {
+    border-color: rgba(0,255,136,0.15);
+    background: linear-gradient(180deg, rgba(0,255,136,0.03) 0%, transparent 100%);
+  }
+  .step-num {
+    font-family: var(--serif);
+    font-size: 48px;
+    font-style: italic;
+    color: rgba(0,255,136,0.15);
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+  .step h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .step p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+  .step code {
+    display: block;
+    margin-top: 14px;
+    padding: 10px 12px;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .step code .g { color: var(--green); }
+
+  /* ═══════════════════════════════════════════════════ */
+  /* SECTION 5: TIERS                                  */
+  /* ═══════════════════════════════════════════════════ */
+  .tiers-section {
+    padding: 120px 24px;
+    border-top: 1px solid var(--border);
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .tiers-section h2 {
+    font-family: var(--serif);
+    font-size: clamp(36px, 5vw, 56px);
+    font-weight: 400;
+    margin-bottom: 12px;
+  }
+  .tiers-section .desc {
+    color: var(--text-muted);
+    margin-bottom: 48px;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .tier-track {
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .tier-item {
+    flex: 1;
+    padding: 28px 16px;
+    background: var(--surface);
+    text-align: center;
+    transition: all 0.3s;
+    position: relative;
+  }
+  .tier-item:hover {
+    background: rgba(0,255,136,0.03);
+  }
+  .tier-item:not(:last-child)::after {
+    content: '→';
+    position: absolute;
+    right: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    font-size: 14px;
+    z-index: 1;
+  }
+  .tier-item .tier-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+  }
+  .tier-item .tier-fee {
+    font-family: var(--mono);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--green);
+    line-height: 1;
+  }
+  .tier-item .tier-fee-label {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+  .tier-item .tier-xp {
+    margin-top: 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  /* ═══════════════════════════════════════════════════ */
+  /* SECTION 6: FINAL CTA                              */
+  /* ═══════════════════════════════════════════════════ */
+  .final-cta {
+    padding: 160px 24px;
+    text-align: center;
+    position: relative;
+    border-top: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .final-cta::before {
+    content: '';
+    position: absolute;
+    bottom: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px; height: 400px;
+    background: radial-gradient(ellipse, rgba(0,255,136,0.06), transparent 70%);
+    pointer-events: none;
+  }
+  .final-cta h2 {
+    font-family: var(--serif);
+    font-size: clamp(40px, 6vw, 80px);
+    font-weight: 400;
+    line-height: 1.1;
+    max-width: 700px;
+    margin: 0 auto 24px;
+    position: relative;
+  }
+  .final-cta h2 em { font-style: italic; color: var(--green); }
+  .final-cta p {
+    color: var(--text-muted);
+    font-size: 17px;
+    max-width: 500px;
+    margin: 0 auto 40px;
+    line-height: 1.6;
+  }
+  .cta-btn {
+    display: inline-block;
+    padding: 16px 40px;
+    background: var(--green);
+    color: #000;
+    font-weight: 800;
+    font-size: 15px;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: all 0.3s;
+    box-shadow: 0 0 30px rgba(0,255,136,0.2);
+    font-family: var(--sans);
+  }
+  .cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 50px rgba(0,255,136,0.3);
+  }
+
+  /* PAGE-LEVEL NOTE */
+  .design-note {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+    text-align: center;
+  }
+  .design-note h3 {
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+  }
+  .design-note ul {
+    list-style: none;
+    padding: 0;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 2;
+  }
+  .design-note ul li::before {
+    content: '→ ';
+    color: var(--green);
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- SECTION 1: HERO                                -->
+<!-- ════════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-overline">
+    <div class="dot"></div>
+    FOR PROVIDERS & INVESTORS
+  </div>
+  <h1>
+    Own the infrastructure<br>of the <em>AI era</em>
+  </h1>
+  <p class="hero-sub">
+    In every technology revolution, the biggest returns go to those who own the infrastructure layer. In AI, that layer is GPU compute.
+  </p>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="number">300%</div>
+      <div class="unit">AVG. ANNUAL ROI</div>
+    </div>
+    <div class="hero-stat">
+      <div class="number">4mo</div>
+      <div class="unit">AVG. BREAK-EVEN</div>
+    </div>
+    <div class="hero-stat">
+      <div class="number">$2.1B</div>
+      <div class="unit">MARKETPLACE DEMAND</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- SECTION 2: YIELD TABLE                         -->
+<!-- ════════════════════════════════════════════════ -->
+<section class="yield-section">
+  <div class="label" style="text-align:center;margin-bottom:16px;">PROJECTED YIELD</div>
+  <h2>Your hardware,<br>generating yield.</h2>
+  <p class="desc">Market rates from the Velocity marketplace. Projected monthly yield assumes 14 hours of daily utilization.</p>
+
+  <div class="yield-grid">
+    <div class="yield-card">
+      <div class="gpu-name">RTX 4090</div>
+      <div class="rate">$0.55<span class="rate-unit">/hr</span></div>
+      <div class="monthly">
+        <div class="amount">$231/mo</div>
+        <div class="period">projected monthly yield</div>
+      </div>
+      <div class="roi-badge">↑ 173% annual ROI</div>
+    </div>
+    <div class="yield-card">
+      <div class="gpu-name">A100 80GB</div>
+      <div class="rate">$1.20<span class="rate-unit">/hr</span></div>
+      <div class="monthly">
+        <div class="amount">$504/mo</div>
+        <div class="period">projected monthly yield</div>
+      </div>
+      <div class="roi-badge">↑ 42% annual ROI</div>
+    </div>
+    <div class="yield-card">
+      <div class="gpu-name">H100 SXM5</div>
+      <div class="rate">$2.50<span class="rate-unit">/hr</span></div>
+      <div class="monthly">
+        <div class="amount">$1,050/mo</div>
+        <div class="period">projected monthly yield</div>
+      </div>
+      <div class="roi-badge">↑ 38% annual ROI</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- SECTION 3: MACRO THESIS                        -->
+<!-- ════════════════════════════════════════════════ -->
+<section class="thesis-section">
+  <div class="thesis-inner">
+    <div class="thesis-left">
+      <div class="label" style="margin-bottom:16px;">WHY COMPUTE</div>
+      <h2>The scarcest resource<br>in technology.</h2>
+      <p>AI model complexity doubles every 6 months. Enterprise inference costs now exceed training costs. And GPU supply can't keep up. Every idle GPU is yield left on the table.</p>
+    </div>
+    <div class="thesis-right">
+      <div class="thesis-stat">
+        <div class="big">10<span>×</span></div>
+        <div class="context">AI compute demand growth per year</div>
+      </div>
+      <div class="thesis-stat">
+        <div class="big"><span>$</span>500B</div>
+        <div class="context">Global AI infrastructure spend by 2028</div>
+      </div>
+      <div class="thesis-stat">
+        <div class="big">85<span>%</span></div>
+        <div class="context">Of GPUs sit idle at any given time</div>
+      </div>
+      <div class="thesis-stat">
+        <div class="big">2<span>×</span></div>
+        <div class="context">Enterprise AI budgets doubling annually</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- SECTION 4: HOW IT WORKS                        -->
+<!-- ════════════════════════════════════════════════ -->
+<section class="steps-section">
+  <div class="label" style="margin-bottom:16px;">THREE STEPS</div>
+  <h2>From idle to earning<br>in five minutes.</h2>
+
+  <div class="steps-row">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h3>Install</h3>
+      <p>One command installs the Velocity agent. Auto-detects your GPU, CUDA version, and network.</p>
+      <code><span class="g">$</span> curl -sSL velocity.cloud/install | bash</code>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h3>Price</h3>
+      <p>Accept the market rate or set your own. Auto-pricing adjusts to maximize utilization and yield.</p>
+      <code><span class="g">→</span> Market rate: <span class="g">$0.55</span>/GPU/hr</code>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h3>Earn</h3>
+      <p>Your GPU generates revenue automatically. Per-second billing. Payouts every week. Track it all from your dashboard.</p>
+      <code><span class="g">↑</span> $231/mo projected yield</code>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- SECTION 5: TIERS                               -->
+<!-- ════════════════════════════════════════════════ -->
+<section class="tiers-section">
+  <div class="label" style="margin-bottom:16px;">COMPOUND YOUR RETURNS</div>
+  <h2>Earn more<br>by staying on.</h2>
+  <p class="desc">Platform fees decrease as you accumulate XP. Your effective yield increases without changing hardware.</p>
+
+  <div class="tier-track">
+    <div class="tier-item">
+      <div class="tier-name">Bronze</div>
+      <div class="tier-fee">15%</div>
+      <div class="tier-fee-label">platform fee</div>
+      <div class="tier-xp">0 XP</div>
+    </div>
+    <div class="tier-item">
+      <div class="tier-name">Silver</div>
+      <div class="tier-fee">12%</div>
+      <div class="tier-fee-label">platform fee</div>
+      <div class="tier-xp">1,000 XP</div>
+    </div>
+    <div class="tier-item">
+      <div class="tier-name">Gold</div>
+      <div class="tier-fee">10%</div>
+      <div class="tier-fee-label">platform fee</div>
+      <div class="tier-xp">5,000 XP</div>
+    </div>
+    <div class="tier-item">
+      <div class="tier-name">Platinum</div>
+      <div class="tier-fee">7%</div>
+      <div class="tier-fee-label">platform fee</div>
+      <div class="tier-xp">15,000 XP</div>
+    </div>
+    <div class="tier-item">
+      <div class="tier-name">Diamond</div>
+      <div class="tier-fee">5%</div>
+      <div class="tier-fee-label">platform fee</div>
+      <div class="tier-xp">50,000 XP</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- SECTION 6: FINAL CTA                           -->
+<!-- ════════════════════════════════════════════════ -->
+<section class="final-cta">
+  <h2>Every idle hour<br>is <em>yield forgone.</em></h2>
+  <p>Plug in your GPU. Start earning in five minutes. Join the infrastructure layer of the AI economy.</p>
+  <a href="#" class="cta-btn">Start Generating Yield</a>
+</section>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- DESIGN NOTES                                    -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="design-note">
+  <h3>Design Direction Notes</h3>
+  <ul>
+    <li>Instrument Serif for headlines — editorial, institutional gravitas</li>
+    <li>Italic green accents on key words — draws eye to the thesis</li>
+    <li>JetBrains Mono for data — precision, credibility</li>
+    <li>Satoshi for body text — clean modern sans</li>
+    <li>Breathing radial gradients — subtle life, not distracting</li>
+    <li>Animated underline on "AI era" — draws attention to key phrase</li>
+    <li>Hover elevations on cards — depth without clutter</li>
+    <li>All prices in USD — global credibility</li>
+    <li>Full framer-motion animations will be added in implementation</li>
+    <li>Scroll-triggered reveals, staggered entrances, counter animations for stats</li>
+  </ul>
+</div>
+
+</body>
+</html>

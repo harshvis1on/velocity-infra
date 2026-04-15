@@ -16,7 +16,7 @@ export default async function DatacenterApplyPage() {
   if (user) {
     const { data: p } = await supabase
       .from('users')
-      .select('wallet_balance_inr, phone, role')
+      .select('wallet_balance_inr, phone, role, referral_code')
       .eq('id', user.id)
       .single()
     
@@ -44,42 +44,35 @@ export default async function DatacenterApplyPage() {
   }
 
   return (
-    <div className="min-h-screen flex bg-[#050505] text-white font-sans">
+    <div className="min-h-screen flex bg-[#060606] text-white" style={{ fontFamily: 'var(--font-sans, Outfit, sans-serif)' }}>
       <ConsoleSidebar 
         role={profile?.role || 'host'} 
         walletBalance={walletBalance} 
         userEmail={user?.email} 
-        userPhone={profile?.phone} 
+        userPhone={profile?.phone}
+        referralCode={profile?.referral_code}
       />
 
-      {/* MAIN CONTENT */}
       <main className="flex-1 flex flex-col h-screen overflow-y-auto">
-        <header className="h-16 flex items-center justify-between px-8 border-b border-white/10 bg-[#050505] sticky top-0 z-10">
-          <h1 className="text-xl font-bold">Secure Cloud — Datacenter Partner Application</h1>
+        <header className="h-14 flex items-center justify-between px-8 border-b border-white/[0.06] bg-[#060606]/80 backdrop-blur-xl sticky top-0 z-10">
+          <h1 className="text-sm font-medium text-white">Enterprise Application</h1>
           <div className="flex items-center gap-4">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-blue-500"></div>
+            <div className="w-6 h-6 rounded-md bg-gradient-to-r from-primary to-blue-500" />
           </div>
         </header>
 
         <div className="p-8 max-w-4xl mx-auto w-full">
-          {/* HEADER SECTION */}
           <div className="mb-10 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 text-primary mb-4">
-              <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" /></svg>
-            </div>
-            <h2 className="text-3xl font-bold mb-2">Become a Secure Cloud Partner</h2>
-            <p className="text-gray-400 max-w-2xl mx-auto">
-              Join Velocity Infra's elite tier of datacenter providers. Secure Cloud partners benefit from enterprise-grade visibility, higher trust scores, and priority access to enterprise workloads.
+            <div className="text-[11px] uppercase tracking-[0.2em] text-gray-600 mb-6">Secure Cloud Program</div>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">Become an <span className="text-primary">Enterprise Partner</span></h2>
+            <p className="text-gray-500 max-w-2xl mx-auto text-sm">
+              Join Velocity&apos;s elite tier of datacenter providers. Enterprise partners get higher trust scores, priority workloads, and reduced platform fees.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 mb-12">
-            {/* BENEFITS */}
-            <div className="bg-gradient-to-br from-primary/5 to-blue-500/5 border border-primary/20 rounded-2xl p-6">
-              <h2 className="text-lg font-bold text-primary mb-4 flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                Enterprise Benefits
-              </h2>
+          <div className="grid md:grid-cols-2 gap-6 mb-12">
+            <div className="border border-primary/10 rounded-xl p-6 bg-primary/[0.02]">
+              <div className="text-[10px] uppercase tracking-[0.15em] text-primary mb-4 font-medium">Enterprise Benefits</div>
               <ul className="space-y-4 text-sm text-gray-300">
                 <li className="flex items-start gap-3">
                   <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-primary">✓</div>
@@ -112,12 +105,8 @@ export default async function DatacenterApplyPage() {
               </ul>
             </div>
 
-            {/* REQUIREMENTS */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-              <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                Requirements
-              </h2>
+            <div className="border border-white/[0.06] rounded-xl p-6 bg-white/[0.02]">
+              <div className="text-[10px] uppercase tracking-[0.15em] text-gray-600 mb-4 font-medium">Requirements</div>
               <div className="space-y-4 text-sm">
                 <div className="flex items-start gap-3">
                   <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${machineCount >= 5 ? 'border-green-500 bg-green-500/20' : 'border-gray-600'}`}>

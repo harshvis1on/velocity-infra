@@ -66,56 +66,45 @@ export default function DocsSidebar() {
 
   return (
     <aside
-      className="relative z-40 flex w-full flex-col border-b border-white/10 bg-[#050505] md:fixed md:left-0 md:top-16 md:h-[calc(100vh-4rem)] md:w-[260px] md:overflow-y-auto md:border-b-0 md:border-r"
+      className="relative z-40 flex w-full flex-col border-b border-white/[0.06] bg-[#080808] md:fixed md:left-0 md:top-16 md:h-[calc(100vh-4rem)] md:w-[260px] md:overflow-y-auto md:border-b-0 md:border-r md:border-white/[0.06]"
       aria-label="Documentation navigation"
     >
-      <div className="border-b border-white/10 px-4 py-5">
+      <div className="border-b border-white/[0.06] px-5 py-5">
         <Link
           href="/docs"
-          className="text-lg font-bold tracking-tight text-white hover:text-primary transition-colors"
+          className="text-sm font-bold tracking-tight text-white hover:text-primary transition-colors"
         >
           Velocity Docs
         </Link>
         <Link
           href="/"
-          className="mt-2 inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-primary transition-colors"
+          className="mt-2 inline-flex items-center gap-1.5 text-xs text-gray-600 hover:text-primary transition-colors"
         >
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            aria-hidden
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
+          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back to site
         </Link>
       </div>
 
-      <nav className="flex-1 space-y-6 px-3 py-4 pb-10">
+      <nav className="flex-1 space-y-5 px-3 py-4 pb-10">
         {SECTIONS.map((section) => (
           <div key={section.title}>
-            <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+            <p className="px-3 pb-2 text-[10px] font-medium uppercase tracking-[0.15em] text-gray-600">
               {section.title}
             </p>
             <ul className="space-y-0.5">
               {section.links.map((link) => {
                 const active = isLinkActive(pathname, link.href);
                 return (
-                  <li key={link.href}>
+                  <li key={link.href + link.label}>
                     <Link
                       href={link.href}
                       className={[
-                        'block rounded-md px-2 py-1.5 text-sm transition-colors',
+                        'block rounded-md px-3 py-1.5 text-sm transition-all',
                         active
-                          ? 'border-l-2 border-primary bg-primary/10 pl-[6px] font-medium text-primary'
-                          : 'border-l-2 border-transparent pl-[6px] text-gray-300 hover:bg-white/5 hover:text-white',
+                          ? 'bg-primary/[0.08] font-medium text-primary border-l-2 border-primary pl-[10px]'
+                          : 'text-gray-500 hover:bg-white/[0.04] hover:text-white border-l-2 border-transparent pl-[10px]',
                       ].join(' ')}
                     >
                       {link.label}
