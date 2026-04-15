@@ -1,0 +1,9 @@
+{
+  "name": "flux-dev",
+  "label": "FLUX.2 Dev",
+  "docker_image": "ghcr.io/black-forest-labs/flux:dev",
+  "description": "FLUX.2 image generation model by Black Forest Labs. State-of-the-art text-to-image with 12B params.",
+  "launch_mode": "jupyter",
+  "is_recommended": true,
+  "category": "image"
+}

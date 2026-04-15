@@ -1,0 +1,9 @@
+{
+  "name": "hidream",
+  "label": "HiDream I1",
+  "docker_image": "runpod/pytorch:2.2.0-py3.10-cuda12.1.1-devel-ubuntu22.04",
+  "description": "HiDream I1 text-to-image model. High-resolution generation with fine detail control.",
+  "launch_mode": "jupyter",
+  "is_recommended": false,
+  "category": "image"
+}

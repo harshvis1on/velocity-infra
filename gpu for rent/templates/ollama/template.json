@@ -1,0 +1,9 @@
+{
+  "name": "ollama",
+  "label": "Ollama",
+  "docker_image": "ollama/ollama:latest",
+  "description": "Run any open-source LLM locally — Llama 3, Mistral, Gemma, Phi, and more. Easiest way to get started.",
+  "launch_mode": "api",
+  "is_recommended": true,
+  "category": "llm"
+}

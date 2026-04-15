@@ -1,0 +1,9 @@
+{
+  "name": "jax-cuda",
+  "label": "JAX with CUDA",
+  "docker_image": "nvcr.io/nvidia/jax:23.08-py3",
+  "description": "JAX with GPU acceleration via CUDA. XLA compilation, Flax, and Optax pre-installed.",
+  "launch_mode": "jupyter",
+  "is_recommended": false,
+  "category": "ml"
+}

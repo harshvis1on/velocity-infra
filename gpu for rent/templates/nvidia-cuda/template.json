@@ -1,0 +1,9 @@
+{
+  "name": "nvidia-cuda",
+  "label": "NVIDIA CUDA",
+  "docker_image": "nvidia/cuda:12.4.1-devel-ubuntu22.04",
+  "description": "Bare CUDA toolkit and development environment.",
+  "launch_mode": "ssh",
+  "is_recommended": false,
+  "category": "base"
+}

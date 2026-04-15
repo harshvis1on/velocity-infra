@@ -1,0 +1,41 @@
+{
+  "name": "velocity-infra",
+  "version": "3.0.0",
+  "description": "CLI for Velocity Infra — GPU Cloud Marketplace for India. Rent GPUs, manage instances, and deploy AI workloads from the terminal.",
+  "main": "index.js",
+  "bin": {
+    "velocity": "./index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "gpu",
+    "cloud",
+    "ai",
+    "ml",
+    "deep-learning",
+    "gpu-rental",
+    "india",
+    "velocity-infra",
+    "cuda",
+    "docker",
+    "inference",
+    "training"
+  ],
+  "author": "Velocity Infra <support@velocityinfra.com>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/velocity-infra/velocity-infra"
+  },
+  "homepage": "https://velocity-infra.vercel.app",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.15.0",
+    "commander": "^14.0.3",
+    "dotenv": "^17.4.1"
+  }
+}

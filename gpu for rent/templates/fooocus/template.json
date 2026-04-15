@@ -1,0 +1,9 @@
+{
+  "name": "fooocus",
+  "label": "Fooocus",
+  "docker_image": "mcagov/fooocus:latest",
+  "description": "Image generating software based on Gradio, focusing on prompting and generating.",
+  "launch_mode": "entrypoint",
+  "is_recommended": false,
+  "category": "diffusion"
+}

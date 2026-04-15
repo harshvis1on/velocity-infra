@@ -1,0 +1,9 @@
+{
+  "name": "ltx-video",
+  "label": "LTX-Video 2.3",
+  "docker_image": "runpod/pytorch:2.2.0-py3.10-cuda12.1.1-devel-ubuntu22.04",
+  "description": "LTX-Video 2.3 text-to-video and image-to-video generation. High quality short video clips.",
+  "launch_mode": "jupyter",
+  "is_recommended": true,
+  "category": "video"
+}

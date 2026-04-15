@@ -1,0 +1,9 @@
+{
+  "name": "tgi",
+  "label": "TGI (Hugging Face)",
+  "docker_image": "ghcr.io/huggingface/text-generation-inference:latest",
+  "description": "Toolkit for deploying and serving Large Language Models by Hugging Face.",
+  "launch_mode": "entrypoint",
+  "is_recommended": false,
+  "category": "llm"
+}

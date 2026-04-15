@@ -1,0 +1,9 @@
+{
+  "name": "ubuntu-base",
+  "label": "Base Ubuntu 22.04",
+  "docker_image": "nvidia/cuda:12.2.2-devel-ubuntu22.04",
+  "description": "Clean Ubuntu 22.04 with CUDA 12.2",
+  "launch_mode": "ssh",
+  "is_recommended": true,
+  "category": "base"
+}

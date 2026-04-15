@@ -1,0 +1,9 @@
+{
+  "name": "isaac-sim",
+  "label": "NVIDIA Isaac Sim",
+  "docker_image": "nvcr.io/nvidia/isaac-sim:4.2.0",
+  "description": "NVIDIA Isaac Sim for robotics simulation, synthetic data generation, and reinforcement learning.",
+  "launch_mode": "jupyter",
+  "is_recommended": false,
+  "category": "robotics"
+}

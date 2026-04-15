@@ -1,0 +1,9 @@
+{
+  "name": "sd-webui-forge",
+  "label": "SD WebUI Forge",
+  "docker_image": "runpod/stable-diffusion:forge-latest",
+  "description": "Optimized fork of A1111 for better performance and lower VRAM usage.",
+  "launch_mode": "entrypoint",
+  "is_recommended": false,
+  "category": "diffusion"
+}

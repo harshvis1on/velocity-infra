@@ -1,0 +1,9 @@
+{
+  "name": "tensorflow",
+  "label": "TensorFlow 2.x",
+  "docker_image": "tensorflow/tensorflow:latest-gpu-jupyter",
+  "description": "TensorFlow 2.x with GPU support, Keras, and JupyterLab. Ready for training and inference.",
+  "launch_mode": "jupyter",
+  "is_recommended": false,
+  "category": "ml"
+}

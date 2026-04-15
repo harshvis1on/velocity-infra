@@ -1,0 +1,9 @@
+{
+  "name": "vllm",
+  "label": "vLLM (OpenAI Compatible)",
+  "docker_image": "vllm/vllm-openai:latest",
+  "description": "High-throughput and memory-efficient LLM inference engine. OpenAI API compatible.",
+  "launch_mode": "entrypoint",
+  "is_recommended": true,
+  "category": "llm"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "llama-cpp",
+  "label": "llama.cpp",
+  "docker_image": "ghcr.io/ggerganov/llama.cpp:server-cuda",
+  "description": "High-performance GGUF model inference with llama.cpp. OpenAI-compatible server. Low VRAM usage.",
+  "launch_mode": "api",
+  "is_recommended": false,
+  "category": "llm"
+}

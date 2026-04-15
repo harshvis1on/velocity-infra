@@ -1,0 +1,9 @@
+{
+  "name": "sd-webui-a1111",
+  "label": "SD WebUI (A1111)",
+  "docker_image": "runpod/stable-diffusion:web-ui-1.0.0",
+  "description": "The standard web interface for Stable Diffusion models.",
+  "launch_mode": "jupyter",
+  "is_recommended": true,
+  "category": "diffusion"
+}

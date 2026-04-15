@@ -1,0 +1,9 @@
+{
+  "name": "qwen3",
+  "label": "Qwen 3.5",
+  "docker_image": "vllm/vllm-openai:latest",
+  "description": "Qwen 3.5 instruction-tuned LLM via vLLM. Great for coding, reasoning, and multilingual tasks.",
+  "launch_mode": "api",
+  "is_recommended": true,
+  "category": "llm"
+}

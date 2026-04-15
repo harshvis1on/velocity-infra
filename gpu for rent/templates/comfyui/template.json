@@ -1,0 +1,9 @@
+{
+  "name": "comfyui",
+  "label": "ComfyUI",
+  "docker_image": "yanwk/comfyui-boot:latest",
+  "description": "Powerful and modular stable diffusion GUI with a graph/nodes interface.",
+  "launch_mode": "entrypoint",
+  "is_recommended": true,
+  "category": "diffusion"
+}

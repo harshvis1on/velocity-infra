@@ -1,0 +1,9 @@
+{
+  "name": "open-sora",
+  "label": "Open-Sora",
+  "docker_image": "hpcaitech/open-sora:latest",
+  "description": "Open-source initiative for video generation models.",
+  "launch_mode": "jupyter",
+  "is_recommended": true,
+  "category": "video"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "pytorch-2.2",
+  "label": "PyTorch 2.2",
+  "docker_image": "runpod/pytorch:2.2.0-py3.10-cuda12.1.1-devel-ubuntu22.04",
+  "description": "JupyterLab, PyTorch 2.2, CUDA 12.1, Python 3.10",
+  "launch_mode": "jupyter",
+  "is_recommended": true,
+  "category": "ml"
+}

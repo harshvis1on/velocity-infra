@@ -1,0 +1,9 @@
+{
+  "name": "dia",
+  "label": "Dia 1.6B",
+  "docker_image": "runpod/pytorch:2.2.0-py3.10-cuda12.1.1-devel-ubuntu22.04",
+  "description": "Dia 1.6B dialogue TTS model. Generate realistic multi-speaker conversations with natural prosody.",
+  "launch_mode": "api",
+  "is_recommended": false,
+  "category": "audio"
+}

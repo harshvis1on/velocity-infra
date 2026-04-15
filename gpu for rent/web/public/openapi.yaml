@@ -1,0 +1,345 @@
+openapi: 3.0.3
+info:
+  title: Velocity Infra API
+  description: |
+    GPU Cloud Marketplace API for India. Rent GPUs by the hour with INR/UPI payments.
+
+    ## Authentication
+    Use API keys with `Authorization: Bearer vi_live_xxx` header.
+    Get your API key from Settings > API Keys in the dashboard.
+  version: 1.0.0
+  contact:
+    name: Velocity Infra
+    url: https://velocityinfra.in
+
+servers:
+  - url: https://velocity-infra.vercel.app
+    description: Production
+  - url: http://localhost:3000
+    description: Development
+
+paths:
+  /api/console/rent:
+    post:
+      summary: Create a rental instance
+      tags: [Instances]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [offerId, gpuCount, templateId, diskSize, launchMode]
+              properties:
+                offerId:
+                  type: string
+                  format: uuid
+                gpuCount:
+                  type: integer
+                  minimum: 1
+                  maximum: 16
+                templateId:
+                  type: string
+                  format: uuid
+                diskSize:
+                  type: integer
+                  minimum: 10
+                launchMode:
+                  type: string
+                  enum: [ssh, jupyter, both, entrypoint, serverless, desktop]
+                rentalType:
+                  type: string
+                  enum: [on_demand, reserved, interruptible]
+                  default: on_demand
+                bidPriceInr:
+                  type: number
+                  description: Required for interruptible rentals
+                sshKeyId:
+                  type: string
+                  format: uuid
+                newSshKey:
+                  type: string
+      responses:
+        '200':
+          description: Instance created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  instance:
+                    $ref: '#/components/schemas/Instance'
+                  contract:
+                    $ref: '#/components/schemas/RentalContract'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+
+  /api/keys:
+    get:
+      summary: List API keys
+      tags: [Authentication]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of API keys
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  keys:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApiKey'
+    post:
+      summary: Create API key
+      tags: [Authentication]
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  default: API Key
+                permissions:
+                  type: object
+                  properties:
+                    read:
+                      type: boolean
+                    write:
+                      type: boolean
+                    admin:
+                      type: boolean
+                expiresInDays:
+                  type: integer
+      responses:
+        '201':
+          description: API key created (key shown only once)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  key:
+                    type: string
+                    description: Full API key - save it now
+                  prefix:
+                    type: string
+                  name:
+                    type: string
+
+  /api/keys/{id}:
+    delete:
+      summary: Revoke API key
+      tags: [Authentication]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Key revoked
+
+  /api/billing/webhook:
+    post:
+      summary: Razorpay payment webhook
+      tags: [Billing]
+      description: Called by Razorpay on payment.captured events. Do not call directly.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Webhook processed
+
+  /api/billing/invoice/{transactionId}:
+    get:
+      summary: Get invoice for a transaction
+      tags: [Billing]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: HTML invoice
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /api/volumes:
+    get:
+      summary: List volumes
+      tags: [Storage]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: "User's volumes"
+    post:
+      summary: Create a volume
+      tags: [Storage]
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [machineId, name]
+              properties:
+                machineId:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                sizeGb:
+                  type: integer
+                  default: 50
+                mountPath:
+                  type: string
+                  default: /workspace
+      responses:
+        '201':
+          description: Volume created
+
+  /api/templates:
+    get:
+      summary: List templates
+      tags: [Templates]
+      responses:
+        '200':
+          description: Available templates
+    post:
+      summary: Create custom template
+      tags: [Templates]
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, dockerImage]
+              properties:
+                name:
+                  type: string
+                dockerImage:
+                  type: string
+                description:
+                  type: string
+                category:
+                  type: string
+                  enum: [ml, llm, diffusion, video, robotics, base]
+                launchMode:
+                  type: string
+                  enum: [ssh, jupyter, both, entrypoint]
+      responses:
+        '201':
+          description: Template created
+
+  /api/payouts:
+    get:
+      summary: List host payouts
+      tags: [Payouts]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: "Host's payout history"
+
+  /api/health:
+    get:
+      summary: Health check
+      tags: [System]
+      responses:
+        '200':
+          description: System healthy
+        '503':
+          description: System degraded
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: Use vi_live_xxx API key
+
+  schemas:
+    Instance:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [creating, loading, running, stopped, destroyed]
+        gpu_count:
+          type: integer
+        launch_mode:
+          type: string
+        tunnel_url:
+          type: string
+        port_mappings:
+          type: object
+
+    RentalContract:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        gpu_count:
+          type: integer
+        gpu_indices:
+          type: array
+          items:
+            type: integer
+        rental_type:
+          type: string
+        price_per_gpu_hr_inr:
+          type: number
+
+    ApiKey:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        key_prefix:
+          type: string
+        permissions:
+          type: object
+        last_used_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time

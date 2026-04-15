@@ -1,0 +1,9 @@
+{
+  "name": "axolotl",
+  "label": "Axolotl - LLM Fine Tuning",
+  "docker_image": "winglian/axolotl:main-latest",
+  "description": "Streamlined tool for fine-tuning various AI models.",
+  "launch_mode": "jupyter",
+  "is_recommended": true,
+  "category": "llm"
+}
