@@ -23,7 +23,9 @@ function calculateBillingCost(params: {
   }
 }
 
-function calculateGst(amountInr: number) {
+const USD_TO_INR = 85
+
+function calculateGstOnInrCharge(amountInr: number) {
   const baseAmount = amountInr / 1.18
   const gstAmount = amountInr - baseAmount
   return {
@@ -35,44 +37,44 @@ function calculateGst(amountInr: number) {
   }
 }
 
-function calculateHostPayout(grossAmount: number) {
+function calculateHostPayout(grossAmountUsd: number) {
   const tdsRate = 0.01
-  const tds = Math.round(grossAmount * tdsRate * 100) / 100
-  const net = Math.round((grossAmount - tds) * 100) / 100
-  return { grossAmount, tds, net }
+  const tds = Math.round(grossAmountUsd * tdsRate * 100) / 100
+  const net = Math.round((grossAmountUsd - tds) * 100) / 100
+  return { grossAmountUsd, tds, net }
 }
 
-function calculatePlatformSplit(totalCost: number) {
-  const platformShare = totalCost * 0.15
-  const hostShare = totalCost - platformShare
+function calculatePlatformSplit(totalCostUsd: number) {
+  const platformShare = totalCostUsd * 0.15
+  const hostShare = totalCostUsd - platformShare
   return {
     platformShare: Math.round(platformShare * 100) / 100,
     hostShare: Math.round(hostShare * 100) / 100,
   }
 }
 
-describe('Billing Math', () => {
+describe('Billing Math (USD)', () => {
   describe('calculateBillingCost', () => {
     it('calculates running instance cost correctly', () => {
       const result = calculateBillingCost({
-        gpuPricePerHr: 35,
+        gpuPricePerHr: 0.55,
         gpuCount: 1,
-        storagePricePerGbMonth: 4.5,
+        storagePricePerGbMonth: 0.02,
         diskSizeGb: 50,
         minutesElapsed: 60,
         isRunning: true,
       })
 
-      expect(result.gpuCost).toBe(35)
-      expect(result.totalCost).toBeGreaterThan(35)
-      expect(result.storageCostPerHr).toBeCloseTo(0.3125, 3)
+      expect(result.gpuCost).toBe(0.55)
+      expect(result.totalCost).toBeGreaterThan(0.55)
+      expect(result.storageCostPerHr).toBeCloseTo(0.001389, 4)
     })
 
     it('bills only storage for stopped instances', () => {
       const result = calculateBillingCost({
-        gpuPricePerHr: 35,
+        gpuPricePerHr: 0.55,
         gpuCount: 1,
-        storagePricePerGbMonth: 4.5,
+        storagePricePerGbMonth: 0.02,
         diskSizeGb: 50,
         minutesElapsed: 60,
         isRunning: false,
@@ -84,18 +86,18 @@ describe('Billing Math', () => {
 
     it('scales with GPU count', () => {
       const single = calculateBillingCost({
-        gpuPricePerHr: 35, gpuCount: 1, storagePricePerGbMonth: 0, diskSizeGb: 0, minutesElapsed: 60, isRunning: true,
+        gpuPricePerHr: 2.50, gpuCount: 1, storagePricePerGbMonth: 0, diskSizeGb: 0, minutesElapsed: 60, isRunning: true,
       })
-      const double = calculateBillingCost({
-        gpuPricePerHr: 35, gpuCount: 2, storagePricePerGbMonth: 0, diskSizeGb: 0, minutesElapsed: 60, isRunning: true,
+      const quad = calculateBillingCost({
+        gpuPricePerHr: 2.50, gpuCount: 4, storagePricePerGbMonth: 0, diskSizeGb: 0, minutesElapsed: 60, isRunning: true,
       })
 
-      expect(double.totalCost).toBe(single.totalCost * 2)
+      expect(quad.totalCost).toBe(single.totalCost * 4)
     })
 
     it('handles zero minutes', () => {
       const result = calculateBillingCost({
-        gpuPricePerHr: 35, gpuCount: 1, storagePricePerGbMonth: 4.5, diskSizeGb: 50, minutesElapsed: 0, isRunning: true,
+        gpuPricePerHr: 2.50, gpuCount: 1, storagePricePerGbMonth: 0.02, diskSizeGb: 50, minutesElapsed: 0, isRunning: true,
       })
 
       expect(result.totalCost).toBe(0)
@@ -110,57 +112,81 @@ describe('Billing Math', () => {
     })
   })
 
-  describe('calculateGst', () => {
-    it('calculates 18% GST correctly for ₹500', () => {
-      const result = calculateGst(500)
-      expect(result.baseAmount).toBeCloseTo(423.73, 1)
-      expect(result.gstAmount).toBeCloseTo(76.27, 1)
-      expect(result.cgst).toBeCloseTo(38.14, 1)
-      expect(result.sgst).toBeCloseTo(38.14, 1)
+  describe('USD to INR conversion for Razorpay', () => {
+    it('converts $10 to INR correctly', () => {
+      const usd = 10
+      const inr = usd * USD_TO_INR
+      expect(inr).toBe(850)
+    })
+
+    it('converts INR back to USD correctly', () => {
+      const inr = 850
+      const usd = inr / USD_TO_INR
+      expect(usd).toBe(10)
+    })
+
+    it('round-trips without precision loss for whole USD amounts', () => {
+      const original = 25
+      const converted = (original * USD_TO_INR) / USD_TO_INR
+      expect(converted).toBe(original)
+    })
+  })
+
+  describe('GST on INR charge (Razorpay invoice)', () => {
+    it('calculates 18% GST on the INR Razorpay charge', () => {
+      const usdDeposit = 10
+      const inrCharge = usdDeposit * USD_TO_INR
+      const result = calculateGstOnInrCharge(inrCharge)
+
+      expect(result.totalWithGst).toBe(850)
+      expect(result.baseAmount).toBeCloseTo(720.34, 1)
+      expect(result.gstAmount).toBeCloseTo(129.66, 1)
+      expect(result.cgst).toBeCloseTo(64.83, 1)
+      expect(result.sgst).toBeCloseTo(64.83, 1)
     })
 
     it('CGST + SGST equals total GST', () => {
-      const result = calculateGst(1000)
+      const result = calculateGstOnInrCharge(1000)
       expect(result.cgst + result.sgst).toBeCloseTo(result.gstAmount, 1)
     })
   })
 
-  describe('calculateHostPayout', () => {
-    it('deducts 1% TDS', () => {
-      const result = calculateHostPayout(1000)
-      expect(result.tds).toBe(10)
-      expect(result.net).toBe(990)
+  describe('calculateHostPayout (USD)', () => {
+    it('deducts 1% TDS on USD amount', () => {
+      const result = calculateHostPayout(100)
+      expect(result.tds).toBe(1)
+      expect(result.net).toBe(99)
     })
 
-    it('handles small amounts', () => {
-      const result = calculateHostPayout(1)
+    it('handles small USD amounts', () => {
+      const result = calculateHostPayout(0.50)
       expect(result.tds).toBe(0.01)
-      expect(result.net).toBe(0.99)
+      expect(result.net).toBe(0.49)
     })
   })
 
-  describe('calculatePlatformSplit', () => {
+  describe('calculatePlatformSplit (USD)', () => {
     it('takes 15% platform fee', () => {
-      const result = calculatePlatformSplit(100)
-      expect(result.platformShare).toBe(15)
-      expect(result.hostShare).toBe(85)
+      const result = calculatePlatformSplit(10)
+      expect(result.platformShare).toBe(1.50)
+      expect(result.hostShare).toBe(8.50)
     })
 
     it('platform + host equals total', () => {
-      const result = calculatePlatformSplit(237.50)
-      expect(result.platformShare + result.hostShare).toBeCloseTo(237.50, 1)
+      const result = calculatePlatformSplit(2.75)
+      expect(result.platformShare + result.hostShare).toBeCloseTo(2.75, 2)
     })
   })
 
   describe('wallet balance protection', () => {
-    it('caps charge at remaining balance', () => {
-      const walletBalance = 10
-      const totalCost = 35
+    it('caps charge at remaining USD balance', () => {
+      const walletBalance = 0.50
+      const totalCost = 2.50
 
       const cappedCost = Math.min(totalCost, walletBalance)
       const newBalance = walletBalance - cappedCost
 
-      expect(cappedCost).toBe(10)
+      expect(cappedCost).toBe(0.50)
       expect(newBalance).toBe(0)
     })
 

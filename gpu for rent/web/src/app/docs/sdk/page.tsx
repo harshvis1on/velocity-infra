@@ -9,27 +9,27 @@ export const metadata: Metadata = {
 
 export default function SdkDocsPage() {
   return (
-    <article className="space-y-12 text-gray-300">
+    <article className="space-y-12 text-[#E2E8F0]">
       <header className="space-y-3">
         <p className="text-sm font-medium uppercase tracking-widest text-primary/90">Tools</p>
-        <h1 className="text-3xl font-bold tracking-tight text-white md:text-4xl">Python SDK</h1>
+        <h1 className="text-3xl font-bold font-heading tracking-tight text-white md:text-4xl">Python SDK</h1>
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge kind="live" />
-          <p className="max-w-2xl text-lg leading-relaxed text-gray-400">
+          <p className="max-w-2xl text-lg leading-relaxed text-[#94A3B8]">
             Full instance lifecycle, marketplace search, and wallet management from Python.
           </p>
         </div>
       </header>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Installation</h2>
+        <h2 className="text-xl font-semibold font-heading text-white">Installation</h2>
         <CodeBlock>
           {`pip install velocity-infra`}
         </CodeBlock>
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Quick start</h2>
+        <h2 className="text-xl font-semibold font-heading text-white">Quick start</h2>
         <CodeBlock>
           {`from velocity import Velocity
 
@@ -57,7 +57,7 @@ instance.destroy()    # Destroy (release all resources)`}
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Instance management</h2>
+        <h2 className="text-xl font-semibold font-heading text-white">Instance management</h2>
         <CodeBlock>
           {`# List all your instances
 instances = v.list_instances()
@@ -74,7 +74,7 @@ inst.refresh()`}
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Marketplace search</h2>
+        <h2 className="text-xl font-semibold font-heading text-white">Marketplace search</h2>
         <CodeBlock>
           {`# Search with filters
 offers = v.search_offers(
@@ -90,7 +90,7 @@ instance = v.create_instance(gpu="A100", max_price=130)`}
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Templates &amp; wallet</h2>
+        <h2 className="text-xl font-semibold font-heading text-white">Templates &amp; wallet</h2>
         <CodeBlock>
           {`# List available templates
 templates = v.list_templates()
@@ -102,7 +102,7 @@ print(f"Balance: ₹{balance}")`}
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Async support</h2>
+        <h2 className="text-xl font-semibold font-heading text-white">Async support</h2>
         <CodeBlock>
           {`import asyncio
 from velocity import Velocity
@@ -118,23 +118,23 @@ asyncio.run(main())`}
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Environment variables</h2>
-        <div className="overflow-x-auto">
+        <h2 className="text-xl font-semibold font-heading text-white">Environment variables</h2>
+        <div className="overflow-x-auto rounded-xl border border-white/[0.06]">
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="border-b border-white/10 text-left text-gray-500">
-                <th className="py-3 pr-6 font-medium">Variable</th>
-                <th className="py-3 font-medium">Description</th>
+              <tr className="border-b border-white/[0.06] text-left text-[#94A3B8]">
+                <th className="py-3 pr-6 pl-4 font-medium">Variable</th>
+                <th className="py-3 pl-4 font-medium">Description</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
               <tr>
-                <td className="py-3 pr-6 font-mono text-primary">VELOCITY_API_KEY</td>
-                <td className="py-3">Your API key (alternative to passing in constructor)</td>
+                <td className="py-3 pr-6 pl-4 font-mono text-primary">VELOCITY_API_KEY</td>
+                <td className="py-3 pl-4">Your API key (alternative to passing in constructor)</td>
               </tr>
               <tr>
-                <td className="py-3 pr-6 font-mono text-primary">VELOCITY_API_URL</td>
-                <td className="py-3">Custom API base URL (defaults to production)</td>
+                <td className="py-3 pr-6 pl-4 font-mono text-primary">VELOCITY_API_URL</td>
+                <td className="py-3 pl-4">Custom API base URL (defaults to production)</td>
               </tr>
             </tbody>
           </table>

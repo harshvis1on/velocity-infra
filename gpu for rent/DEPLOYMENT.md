@@ -78,7 +78,17 @@ supabase db query --linked < migrations/008-persistent-volumes.sql
 supabase db query --linked < migrations/009-rls-fixes.sql
 supabase db query --linked < migrations/010-self-test-request.sql
 supabase db query --linked < billing-cron.sql
+
+# USD migration — renames all *_inr columns to *_usd, rewrites wallet/billing functions
+supabase db query --linked < migrations/022-usd-migration.sql
 ```
+
+**Before running 022-usd-migration.sql:**
+1. Ensure `pg_cron` extension is enabled in Supabase Dashboard → Database → Extensions
+2. Back up any existing wallet balances (they'll be preserved but the column name changes)
+3. After running, verify: `SELECT wallet_balance_usd FROM users LIMIT 1;` should work
+
+Alternatively, paste the SQL directly into the **Supabase Dashboard → SQL Editor** and run it.
 
 ---
 
@@ -96,7 +106,22 @@ Set up Vercel Cron or an external cron service to call:
 | Endpoint | Schedule | Auth Header |
 |---|---|---|
 | `POST /api/billing/auto-topup` | Every 5 min | `Authorization: Bearer <CRON_SECRET>` |
-| `POST /api/payouts/generate` | Weekly (Sunday) | `Authorization: Bearer <CRON_SECRET>` |
+| `POST /api/payouts/generate` | Daily | `Authorization: Bearer <CRON_SECRET>` |
+| `GET /api/proxy/health` | Every 10 min | `Authorization: Bearer <CRON_SECRET>` |
+
+To configure these in `vercel.json`, add:
+
+```json
+{
+  "crons": [
+    { "path": "/api/billing/auto-topup", "schedule": "*/5 * * * *" },
+    { "path": "/api/payouts/generate", "schedule": "0 2 * * *" },
+    { "path": "/api/proxy/health", "schedule": "*/10 * * * *" }
+  ]
+}
+```
+
+Note: Vercel Cron triggers are GET requests. If your endpoints expect POST, use an external cron service (e.g., cron-job.org, Upstash QStash) that sends POST with the `Authorization: Bearer <CRON_SECRET>` header.
 
 ### Health Check
 

@@ -94,7 +94,7 @@ export async function POST(request: Request) {
       ram_gb: ram_gb || 0,
       vcpu_count: vcpu_count || 0,
       storage_gb: storage_gb || 0,
-      price_per_hour_inr: 0,
+      price_per_hour_usd: 0,
       status: 'available',
       machine_tier: 'unverified',
       cuda_version: cuda_version || null,

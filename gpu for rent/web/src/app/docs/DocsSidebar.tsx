@@ -42,9 +42,9 @@ const SECTIONS: {
   {
     title: 'Platform',
     links: [
-      { href: '/docs/status', label: 'Production Status' },
+      { href: '/docs/status', label: 'Roadmap' },
       { href: '/docs/security', label: 'Security' },
-      { href: '/docs/billing', label: 'Billing & GST' },
+      { href: '/docs/billing', label: 'Billing & Invoicing' },
     ],
   },
 ];
@@ -66,19 +66,19 @@ export default function DocsSidebar() {
 
   return (
     <aside
-      className="relative z-40 flex w-full flex-col border-b border-white/[0.06] bg-[#080808] md:fixed md:left-0 md:top-16 md:h-[calc(100vh-4rem)] md:w-[260px] md:overflow-y-auto md:border-b-0 md:border-r md:border-white/[0.06]"
+      className="relative z-40 flex w-full flex-col border-b border-white/[0.06] bg-[#080D16] md:fixed md:left-0 md:top-16 md:h-[calc(100vh-4rem)] md:w-[260px] md:overflow-y-auto md:border-b-0 md:border-r md:border-white/[0.06]"
       aria-label="Documentation navigation"
     >
       <div className="border-b border-white/[0.06] px-5 py-5">
         <Link
           href="/docs"
-          className="text-sm font-bold tracking-tight text-white hover:text-primary transition-colors"
+          className="text-sm font-bold font-heading tracking-tight text-white hover:text-primary transition-colors"
         >
           Velocity Docs
         </Link>
         <Link
           href="/"
-          className="mt-2 inline-flex items-center gap-1.5 text-xs text-gray-600 hover:text-primary transition-colors"
+          className="mt-2 inline-flex items-center gap-1.5 text-xs text-[#64748B] hover:text-primary transition-colors"
         >
           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -90,7 +90,7 @@ export default function DocsSidebar() {
       <nav className="flex-1 space-y-5 px-3 py-4 pb-10">
         {SECTIONS.map((section) => (
           <div key={section.title}>
-            <p className="px-3 pb-2 text-[10px] font-medium uppercase tracking-[0.15em] text-gray-600">
+            <p className="px-3 pb-2 text-[10px] font-medium uppercase tracking-[0.15em] text-[#64748B]">
               {section.title}
             </p>
             <ul className="space-y-0.5">
@@ -104,7 +104,7 @@ export default function DocsSidebar() {
                         'block rounded-md px-3 py-1.5 text-sm transition-all',
                         active
                           ? 'bg-primary/[0.08] font-medium text-primary border-l-2 border-primary pl-[10px]'
-                          : 'text-gray-500 hover:bg-white/[0.04] hover:text-white border-l-2 border-transparent pl-[10px]',
+                          : 'text-[#94A3B8] hover:bg-white/[0.04] hover:text-white border-l-2 border-transparent pl-[10px]',
                       ].join(' ')}
                     >
                       {link.label}

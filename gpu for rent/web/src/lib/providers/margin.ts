@@ -1,5 +1,6 @@
+import { USD_TO_INR } from '@/lib/currency'
+
 const DEFAULT_MARGIN_PERCENT = 20;
-const USD_TO_INR = 85;
 
 export function getMarginPercent(): number {
   const env = process.env.PROXY_MARGIN_PERCENT;

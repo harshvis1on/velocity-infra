@@ -8,6 +8,7 @@ export async function updateProfile(data: {
   company_name?: string;
   gstin?: string;
   billing_address?: string;
+  billing_country?: string;
   timezone?: string;
   phone?: string;
 }) {
@@ -20,6 +21,7 @@ export async function updateProfile(data: {
   if (data.company_name !== undefined) allowed.company_name = data.company_name
   if (data.gstin !== undefined) allowed.gstin = data.gstin
   if (data.billing_address !== undefined) allowed.billing_address = data.billing_address
+  if (data.billing_country !== undefined) allowed.billing_country = data.billing_country
   if (data.timezone !== undefined) allowed.timezone = data.timezone
   if (data.phone !== undefined) allowed.phone = data.phone
 

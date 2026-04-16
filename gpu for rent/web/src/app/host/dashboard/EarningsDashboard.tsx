@@ -2,14 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
+import { formatUSD } from '@/lib/currency'
 
 interface EarningsData {
   totalAllTime: number
   thisMonth: number
   thisWeek: number
   pendingPayout: number
-  totalPlatformFees: number
-  currentTier: { name: string; fee: string }
   payouts: any[]
   dailyEarnings: { date: string; amount: number }[]
   machineUtilization: { machineId: string; gpu_model: string; utilization: number; earned: number }[]
@@ -30,67 +29,40 @@ export default function EarningsDashboard({ hostId, machines }: { hostId: string
       const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
       const rangeStart = timeRange === '7d' ? weekAgo : timeRange === '30d' ? monthAgo : new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
 
-      const [{ data: allTimeTx }, { data: payouts }, { data: userProfile }, { data: instanceFees }] = await Promise.all([
-        supabase
-          .from('transactions')
-          .select('amount_inr, created_at')
-          .eq('user_id', hostId)
-          .eq('type', 'host_payout')
-          .eq('status', 'completed'),
-        supabase
-          .from('host_payouts')
-          .select('*')
-          .eq('host_id', hostId)
-          .order('created_at', { ascending: false })
-          .limit(20),
-        supabase
-          .from('users')
-          .select('provider_tier')
-          .eq('id', hostId)
-          .single(),
-        supabase
-          .from('machines')
-          .select('instances(platform_fee_inr)')
-          .eq('host_id', hostId),
-      ])
+      const { data: allTimeTx } = await supabase
+        .from('transactions')
+        .select('amount_usd, created_at')
+        .eq('user_id', hostId)
+        .eq('type', 'host_payout')
+        .eq('status', 'completed')
 
-      const TIERS: Record<string, { name: string; fee: string }> = {
-        bronze: { name: 'Bronze', fee: '15%' },
-        silver: { name: 'Silver', fee: '12%' },
-        gold: { name: 'Gold', fee: '10%' },
-        platinum: { name: 'Platinum', fee: '7%' },
-        diamond: { name: 'Diamond', fee: '5%' },
-      }
-      const tierKey = userProfile?.provider_tier || 'bronze'
-      const currentTier = TIERS[tierKey] || TIERS.bronze
+      const { data: payouts } = await supabase
+        .from('host_payouts')
+        .select('*')
+        .eq('host_id', hostId)
+        .order('created_at', { ascending: false })
+        .limit(20)
 
-      const totalPlatformFees = (instanceFees || []).reduce((sum, m) => {
-        const fees = (m.instances as any[] || []).reduce(
-          (s: number, i: any) => s + (i.platform_fee_inr || 0), 0
-        )
-        return sum + fees
-      }, 0)
-
-      const totalAllTime = (allTimeTx || []).reduce((sum, t) => sum + t.amount_inr, 0)
+      const totalAllTime = (allTimeTx || []).reduce((sum, t) => sum + t.amount_usd, 0)
 
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
       const thisMonth = (allTimeTx || [])
         .filter(t => new Date(t.created_at) >= monthStart)
-        .reduce((sum, t) => sum + t.amount_inr, 0)
+        .reduce((sum, t) => sum + t.amount_usd, 0)
 
       const thisWeek = (allTimeTx || [])
         .filter(t => new Date(t.created_at) >= weekAgo)
-        .reduce((sum, t) => sum + t.amount_inr, 0)
+        .reduce((sum, t) => sum + t.amount_usd, 0)
 
       const pendingPayout = (payouts || [])
         .filter(p => p.status === 'pending')
-        .reduce((sum, p) => sum + p.net_amount_inr, 0)
+        .reduce((sum, p) => sum + p.net_amount_usd, 0)
 
       const rangeEarnings = (allTimeTx || []).filter(t => new Date(t.created_at) >= rangeStart)
       const dailyMap: Record<string, number> = {}
       for (const tx of rangeEarnings) {
         const day = new Date(tx.created_at).toISOString().split('T')[0]
-        dailyMap[day] = (dailyMap[day] || 0) + tx.amount_inr
+        dailyMap[day] = (dailyMap[day] || 0) + tx.amount_usd
       }
       const dailyEarnings = Object.entries(dailyMap)
         .map(([date, amount]) => ({ date, amount }))
@@ -107,7 +79,7 @@ export default function EarningsDashboard({ hostId, machines }: { hostId: string
         const totalHrs = m.created_at
           ? (now.getTime() - new Date(m.created_at).getTime()) / (1000 * 60 * 60)
           : 1
-        const earned = instances.reduce((sum: number, i: any) => sum + (i.total_cost_inr || 0), 0)
+        const earned = instances.reduce((sum: number, i: any) => sum + (i.total_cost_usd || 0), 0)
         return {
           machineId: m.id,
           gpu_model: m.gpu_model,
@@ -121,8 +93,6 @@ export default function EarningsDashboard({ hostId, machines }: { hostId: string
         thisMonth,
         thisWeek,
         pendingPayout,
-        totalPlatformFees,
-        currentTier,
         payouts: payouts || [],
         dailyEarnings,
         machineUtilization,
@@ -170,50 +140,19 @@ export default function EarningsDashboard({ hostId, machines }: { hostId: string
       <div className="grid grid-cols-4 gap-4">
         <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
           <div className="text-xs text-gray-400 mb-1">All Time</div>
-          <div className="text-2xl font-bold font-mono text-primary">₹{data.totalAllTime.toFixed(2)}</div>
+          <div className="text-2xl font-bold font-mono text-primary">{formatUSD(data.totalAllTime)}</div>
         </div>
         <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
           <div className="text-xs text-gray-400 mb-1">This Month</div>
-          <div className="text-2xl font-bold font-mono">₹{data.thisMonth.toFixed(2)}</div>
+          <div className="text-2xl font-bold font-mono">{formatUSD(data.thisMonth)}</div>
         </div>
         <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
           <div className="text-xs text-gray-400 mb-1">This Week</div>
-          <div className="text-2xl font-bold font-mono">₹{data.thisWeek.toFixed(2)}</div>
+          <div className="text-2xl font-bold font-mono">{formatUSD(data.thisWeek)}</div>
         </div>
         <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
           <div className="text-xs text-gray-400 mb-1">Pending Payout</div>
-          <div className="text-2xl font-bold font-mono text-yellow-400">₹{data.pendingPayout.toFixed(2)}</div>
-        </div>
-      </div>
-
-      <div className="bg-white/5 border border-white/10 rounded-xl p-5">
-        <h3 className="text-sm font-bold text-gray-400 mb-3">Platform Fees</h3>
-        <div className="flex items-center gap-6">
-          <div>
-            <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Total Fees Paid</div>
-            <div className="text-xl font-bold font-mono text-red-400">₹{data.totalPlatformFees.toFixed(2)}</div>
-          </div>
-          <div className="w-px h-10 bg-white/[0.06]" />
-          <div>
-            <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Current Tier</div>
-            <div className="text-xl font-bold text-white">{data.currentTier.name}</div>
-          </div>
-          <div className="w-px h-10 bg-white/[0.06]" />
-          <div>
-            <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Fee Rate</div>
-            <div className="text-xl font-bold text-primary">{data.currentTier.fee}</div>
-          </div>
-          {data.totalAllTime > 0 && (
-            <>
-              <div className="w-px h-10 bg-white/[0.06]" />
-              <div>
-                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Effective Rate</div>
-                <div className="text-xl font-bold font-mono text-gray-300">
-                  {((data.totalPlatformFees / (data.totalAllTime + data.totalPlatformFees)) * 100).toFixed(1)}%
-                </div>
-              </div>
-            </>
-          )}
+          <div className="text-2xl font-bold font-mono text-yellow-400">{formatUSD(data.pendingPayout)}</div>
         </div>
       </div>
 
@@ -228,7 +167,7 @@ export default function EarningsDashboard({ hostId, machines }: { hostId: string
                   style={{ height: `${(d.amount / maxDailyEarning) * 100}%` }}
                 />
                 <div className="absolute -top-8 bg-black/90 border border-white/10 text-xs text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
-                  ₹{d.amount.toFixed(2)} — {d.date}
+                  {formatUSD(d.amount)} — {d.date}
                 </div>
               </div>
             ))}
@@ -259,7 +198,7 @@ export default function EarningsDashboard({ hostId, machines }: { hostId: string
                   {m.utilization.toFixed(1)}%
                 </div>
                 <div className="w-24 text-right text-xs font-mono text-primary">
-                  ₹{m.earned.toFixed(2)}
+                  {formatUSD(m.earned)}
                 </div>
               </div>
             ))}
@@ -288,9 +227,9 @@ export default function EarningsDashboard({ hostId, machines }: { hostId: string
                   <td className="py-3 px-4 text-gray-300 text-xs">
                     {new Date(p.period_start).toLocaleDateString()} — {new Date(p.period_end).toLocaleDateString()}
                   </td>
-                  <td className="py-3 px-4 text-right font-mono">₹{Number(p.amount_gross_inr).toFixed(2)}</td>
-                  <td className="py-3 px-4 text-right font-mono text-red-400">-₹{Number(p.tds_amount_inr).toFixed(2)}</td>
-                  <td className="py-3 px-4 text-right font-mono text-primary font-bold">₹{Number(p.net_amount_inr).toFixed(2)}</td>
+                  <td className="py-3 px-4 text-right font-mono">{formatUSD(Number(p.amount_gross_usd))}</td>
+                  <td className="py-3 px-4 text-right font-mono text-red-400">-{formatUSD(Number(p.tds_amount_usd))}</td>
+                  <td className="py-3 px-4 text-right font-mono text-primary font-bold">{formatUSD(Number(p.net_amount_usd))}</td>
                   <td className="py-3 px-4 text-right">
                     <span className={`text-xs font-medium px-2 py-0.5 rounded ${
                       p.status === 'paid' ? 'bg-green-500/10 text-green-400' :

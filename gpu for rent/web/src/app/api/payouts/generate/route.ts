@@ -15,13 +15,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const body = await request.json()
+  let body: Record<string, string> = {}
+  try { body = await request.json() } catch { /* GET request or empty body */ }
   const periodStart = body.periodStart || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
   const periodEnd = body.periodEnd || new Date().toISOString()
 
   const { data: hostEarnings, error } = await supabase
     .from('transactions')
-    .select('user_id, amount_inr')
+    .select('user_id, amount_usd')
     .eq('type', 'host_payout')
     .eq('status', 'completed')
     .gte('created_at', periodStart)
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
 
   const earningsByHost: Record<string, number> = {}
   for (const tx of hostEarnings || []) {
-    earningsByHost[tx.user_id] = (earningsByHost[tx.user_id] || 0) + tx.amount_inr
+    earningsByHost[tx.user_id] = (earningsByHost[tx.user_id] || 0) + tx.amount_usd
   }
 
   let payoutsCreated = 0
@@ -45,10 +46,10 @@ export async function POST(request: Request) {
 
     await supabase.from('host_payouts').insert({
       host_id: hostId,
-      amount_gross_inr: grossAmount,
-      tds_amount_inr: tdsAmount,
-      platform_fee_inr: 0,
-      net_amount_inr: netAmount,
+      amount_gross_usd: grossAmount,
+      tds_amount_usd: tdsAmount,
+      platform_fee_usd: 0,
+      net_amount_usd: netAmount,
       period_start: periodStart,
       period_end: periodEnd,
     })
@@ -56,4 +57,8 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ status: 'ok', payouts_created: payoutsCreated })
+}
+
+export async function GET(request: Request) {
+  return POST(request)
 }

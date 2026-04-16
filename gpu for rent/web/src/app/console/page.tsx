@@ -1,7 +1,5 @@
 import { Suspense } from 'react';
 import { createClient } from '@/utils/supabase/server';
-import Link from 'next/link';
-import AddFundsButton from './AddFundsButton';
 import Marketplace from './Marketplace';
 import ProfileDropdown from './ProfileDropdown';
 
@@ -22,13 +20,13 @@ export default async function ConsolePage() {
   if (user) {
     const { data: p } = await supabase
       .from('users')
-      .select('wallet_balance_inr, phone, role, referral_code')
+      .select('wallet_balance_usd, phone, role, referral_code')
       .eq('id', user.id)
       .single()
     
     if (p) {
       profile = p;
-      walletBalance = p.wallet_balance_inr
+      walletBalance = p.wallet_balance_usd
     }
 
     const { data: offers } = await supabase
@@ -37,7 +35,7 @@ export default async function ConsolePage() {
         '*,machines(id,gpu_model,gpu_count,vram_gb,ram_gb,vcpu_count,storage_gb,location,machine_tier,reliability_score,gpu_allocated,inet_down_mbps,inet_up_mbps,public_ip,dlperf_score)'
       )
       .eq('status', 'active')
-      .order('price_per_gpu_hr_inr', { ascending: true })
+      .order('price_per_gpu_hr_usd', { ascending: true })
 
     if (offers) {
       initialOffers = offers
@@ -84,16 +82,16 @@ export default async function ConsolePage() {
       const disk = i.disk_size_gb || 0;
       const rc = Array.isArray(i.rental_contracts) ? i.rental_contracts[0] : i.rental_contracts;
       const gpus = i.gpu_count || 1;
-      if (rc?.price_per_gpu_hr_inr != null) {
+      if (rc?.price_per_gpu_hr_usd != null) {
         const gpuHr =
-          i.rental_type === 'interruptible' && i.bid_price_inr != null
-            ? Number(i.bid_price_inr) * gpus
-            : Number(rc.price_per_gpu_hr_inr) * gpus;
+          i.rental_type === 'interruptible' && i.bid_price_usd != null
+            ? Number(i.bid_price_usd) * gpus
+            : Number(rc.price_per_gpu_hr_usd) * gpus;
         const storageHr =
-          (Number(rc.storage_price_per_gb_month_inr || 0) * disk) / (30 * 24);
+          (Number(rc.storage_price_per_gb_month_usd || 0) * disk) / (30 * 24);
         return acc + gpuHr + storageHr;
       }
-      const computePrice = i.machines?.price_per_hour_inr || 0;
+      const computePrice = i.machines?.price_per_hour_usd || 0;
       const storagePrice = (i.machines?.storage_price_per_gb_hr || 0) * disk;
       return acc + computePrice + storagePrice;
     }, 0);
@@ -101,7 +99,7 @@ export default async function ConsolePage() {
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
 
   return (
-    <div className="min-h-screen flex bg-[#060606] text-white" style={{ fontFamily: 'var(--font-sans, Outfit, sans-serif)' }}>
+    <div className="min-h-screen flex bg-[#0B0F19] text-[#E2E8F0]">
       <ConsoleSidebar 
         role={profile?.role || 'renter'} 
         walletBalance={walletBalance} 
@@ -112,10 +110,10 @@ export default async function ConsolePage() {
       />
 
       <main className="flex-1 flex flex-col h-screen overflow-y-auto">
-        <header className="h-14 flex items-center justify-between px-8 border-b border-white/[0.06] bg-[#060606]/80 backdrop-blur-xl sticky top-0 z-10">
+        <header className="h-14 flex items-center justify-between px-8 border-b border-white/[0.06] bg-[#0B0F19]/80 backdrop-blur-xl sticky top-0 z-10">
           <div className="flex items-center gap-3">
             <h1 className="text-sm font-medium text-white">GPU Marketplace</h1>
-            <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-gray-600">
+            <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-[#64748B]">
               <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
               {(initialOffers || []).reduce(
                 (sum: number, offer: any) => sum + ((offer.machines?.gpu_count || 0) - (offer.machines?.gpu_allocated || 0)),
@@ -128,14 +126,7 @@ export default async function ConsolePage() {
           </div>
         </header>
 
-        <div className="px-8 pt-8 pb-2">
-          <h2 className="text-2xl font-bold text-white">
-            Welcome back, {userName}
-          </h2>
-          <p className="text-gray-500 text-sm mt-1">Browse GPUs at up to 80% off cloud pricing. Deploy in seconds.</p>
-        </div>
-
-        <Suspense fallback={<div className="px-8 py-12 text-gray-600 text-sm">Loading marketplace…</div>}>
+        <Suspense fallback={<div className="px-8 py-12 text-[#64748B] text-sm">Loading marketplace…</div>}>
           <Marketplace
             initialOffers={initialOffers}
             activeInstances={activeInstances}
@@ -144,15 +135,6 @@ export default async function ConsolePage() {
             sshKeys={sshKeys}
           />
         </Suspense>
-
-        <div className="px-8 pb-8">
-          <Link href="/invite" className="block border border-white/[0.06] rounded-xl p-4 hover:border-primary/20 transition-all group">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-yellow-400/10 flex items-center justify-center text-sm shrink-0">🎁</div>
-              <p className="text-sm text-gray-500 flex-1">Know someone who needs GPUs? <span className="text-primary font-medium group-hover:underline">Invite them and both get free GPU hours →</span></p>
-            </div>
-          </Link>
-        </div>
       </main>
     </div>
   );

@@ -15,7 +15,7 @@ export async function GET(
     .select(`
       *,
       machines (id, gpu_model, gpu_count, vram_gb, ram_gb, location, machine_tier, reliability_score, gpu_allocated),
-      rental_contracts (id, gpu_count, status, rental_end_date, renter_id, rental_type, price_per_gpu_hr_inr, created_at)
+      rental_contracts (id, gpu_count, status, rental_end_date, renter_id, rental_type, price_per_gpu_hr_usd, created_at)
     `)
     .eq('id', params.id)
     .eq('host_id', user.id)
@@ -55,13 +55,13 @@ export async function PATCH(
   }
 
   const updateData: Record<string, any> = {};
-  if (parsed.data.pricePerGpuHrInr !== undefined) updateData.price_per_gpu_hr_inr = parsed.data.pricePerGpuHrInr;
-  if (parsed.data.storagePricePerGbMonthInr !== undefined) updateData.storage_price_per_gb_month_inr = parsed.data.storagePricePerGbMonthInr;
-  if (parsed.data.bandwidthUploadPricePerGbInr !== undefined) updateData.bandwidth_upload_price_per_gb_inr = parsed.data.bandwidthUploadPricePerGbInr;
-  if (parsed.data.bandwidthDownloadPricePerGbInr !== undefined) updateData.bandwidth_download_price_per_gb_inr = parsed.data.bandwidthDownloadPricePerGbInr;
+  if (parsed.data.pricePerGpuHrUsd !== undefined) updateData.price_per_gpu_hr_usd = parsed.data.pricePerGpuHrUsd;
+  if (parsed.data.storagePricePerGbMonthUsd !== undefined) updateData.storage_price_per_gb_month_usd = parsed.data.storagePricePerGbMonthUsd;
+  if (parsed.data.bandwidthUploadPricePerGbUsd !== undefined) updateData.bandwidth_upload_price_per_gb_usd = parsed.data.bandwidthUploadPricePerGbUsd;
+  if (parsed.data.bandwidthDownloadPricePerGbUsd !== undefined) updateData.bandwidth_download_price_per_gb_usd = parsed.data.bandwidthDownloadPricePerGbUsd;
   if (parsed.data.minGpu !== undefined) updateData.min_gpu = parsed.data.minGpu;
   if (parsed.data.offerEndDate !== undefined) updateData.offer_end_date = parsed.data.offerEndDate;
-  if (parsed.data.interruptibleMinPriceInr !== undefined) updateData.interruptible_min_price_inr = parsed.data.interruptibleMinPriceInr;
+  if (parsed.data.interruptibleMinPriceUsd !== undefined) updateData.interruptible_min_price_usd = parsed.data.interruptibleMinPriceUsd;
   if (parsed.data.reservedDiscountFactor !== undefined) updateData.reserved_discount_factor = parsed.data.reservedDiscountFactor;
 
   const { data: updated, error } = await supabase

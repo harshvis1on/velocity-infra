@@ -24,15 +24,15 @@ export default function SettingsTabs({ profile, userEmail, userId }: SettingsTab
 
   return (
     <div>
-      <div className="flex gap-1 mb-6 bg-white/[0.03] rounded-lg p-1 border border-white/[0.06]">
+      <div className="flex gap-1 mb-6 bg-white/[0.03] rounded-xl p-1 border border-white/[0.06]">
         {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => { setActiveTab(tab.id); setMessage(''); }}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
               activeTab === tab.id
-                ? 'bg-white/10 text-white'
-                : 'text-gray-500 hover:text-gray-300'
+                ? 'bg-gradient-to-r from-primary-dark to-primary text-white shadow-sm'
+                : 'text-[#94A3B8] hover:text-[#E2E8F0]'
             }`}
           >
             {tab.label}
@@ -41,7 +41,7 @@ export default function SettingsTabs({ profile, userEmail, userId }: SettingsTab
       </div>
 
       {message && (
-        <div className={`mb-4 p-3 rounded-lg text-sm ${message.startsWith('Error') ? 'bg-red-500/10 border border-red-500/20 text-red-400' : 'bg-green-500/10 border border-green-500/20 text-green-400'}`}>
+        <div className={`mb-4 p-3 rounded-lg text-sm ${message.startsWith('Error') ? 'bg-red-500/10 border border-red-500/20 text-red-400' : 'bg-primary/10 border border-primary/20 text-primary'}`}>
           {message}
         </div>
       )}
@@ -64,6 +64,7 @@ function ProfileTab({ profile, userEmail, userId, saving, setSaving, setMessage 
   const [companyName, setCompanyName] = useState(profile?.company_name || '');
   const [gstin, setGstin] = useState(profile?.gstin || '');
   const [billingAddress, setBillingAddress] = useState(profile?.billing_address || '');
+  const [billingCountry, setBillingCountry] = useState(profile?.billing_country || 'IN');
   const [timezone, setTimezone] = useState(profile?.timezone || 'Asia/Kolkata');
   const [phone, setPhone] = useState(profile?.phone || '');
 
@@ -77,7 +78,7 @@ function ProfileTab({ profile, userEmail, userId, saving, setSaving, setMessage 
     setSaving(true);
     setMessage('');
     try {
-      await updateProfile({ full_name: fullName, company_name: companyName, gstin, billing_address: billingAddress, timezone, phone });
+      await updateProfile({ full_name: fullName, company_name: companyName, gstin, billing_address: billingAddress, billing_country: billingCountry, timezone, phone });
       setMessage('Profile updated successfully.');
     } catch (err: any) {
       setMessage('Error: ' + err.message);
@@ -105,29 +106,49 @@ function ProfileTab({ profile, userEmail, userId, saving, setSaving, setMessage 
     'Asia/Tokyo', 'Asia/Shanghai', 'Asia/Singapore', 'Australia/Sydney', 'UTC',
   ];
 
+  const COUNTRIES = [
+    { code: 'IN', name: 'India' },
+    { code: 'US', name: 'United States' },
+    { code: 'GB', name: 'United Kingdom' },
+    { code: 'DE', name: 'Germany' },
+    { code: 'FR', name: 'France' },
+    { code: 'CA', name: 'Canada' },
+    { code: 'AU', name: 'Australia' },
+    { code: 'SG', name: 'Singapore' },
+    { code: 'JP', name: 'Japan' },
+    { code: 'AE', name: 'United Arab Emirates' },
+    { code: 'NL', name: 'Netherlands' },
+    { code: 'SE', name: 'Sweden' },
+    { code: 'CH', name: 'Switzerland' },
+    { code: 'BR', name: 'Brazil' },
+    { code: 'KR', name: 'South Korea' },
+    { code: 'IL', name: 'Israel' },
+    { code: 'OTHER', name: 'Other' },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Account info (read-only) */}
       <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-5">
-        <h3 className="text-sm font-bold text-white mb-3">Account</h3>
+        <h3 className="text-sm font-bold text-[#E2E8F0] mb-3">Account</h3>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <div className="text-[11px] text-gray-500 uppercase tracking-wider mb-0.5">Email</div>
-            <div className="text-gray-300">{userEmail}</div>
+            <div className="text-[11px] text-[#64748B] uppercase tracking-wider mb-0.5">Email</div>
+            <div className="text-[#94A3B8]">{userEmail}</div>
           </div>
           <div>
-            <div className="text-[11px] text-gray-500 uppercase tracking-wider mb-0.5">User ID</div>
-            <div className="text-gray-400 font-mono text-xs">{userId}</div>
+            <div className="text-[11px] text-[#64748B] uppercase tracking-wider mb-0.5">User ID</div>
+            <div className="text-[#94A3B8] font-mono text-xs">{userId}</div>
           </div>
           <div>
-            <div className="text-[11px] text-gray-500 uppercase tracking-wider mb-0.5">Role</div>
-            <div className="text-gray-300 capitalize">{profile?.role || 'renter'}</div>
+            <div className="text-[11px] text-[#64748B] uppercase tracking-wider mb-0.5">Role</div>
+            <div className="text-[#94A3B8] capitalize">{profile?.role || 'renter'}</div>
           </div>
           <div>
-            <div className="text-[11px] text-gray-500 uppercase tracking-wider mb-0.5">KYC Status</div>
-            <div className={`capitalize ${profile?.kyc_status === 'completed' ? 'text-green-400' : 'text-yellow-400'}`}>
+            <div className="text-[11px] text-[#64748B] uppercase tracking-wider mb-0.5">KYC Status</div>
+            <div className={`capitalize ${profile?.kyc_status === 'completed' ? 'text-primary' : 'text-yellow-400'}`}>
               {profile?.kyc_status || 'pending'}
-              {profile?.kyc_tier && <span className="text-gray-500 ml-1">({profile.kyc_tier})</span>}
+              {profile?.kyc_tier && <span className="text-[#64748B] ml-1">({profile.kyc_tier})</span>}
             </div>
           </div>
         </div>
@@ -135,21 +156,35 @@ function ProfileTab({ profile, userEmail, userId, saving, setSaving, setMessage 
 
       {/* Editable profile */}
       <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-5">
-        <h3 className="text-sm font-bold text-white mb-4">Personal Information</h3>
+        <h3 className="text-sm font-bold text-[#E2E8F0] mb-4">Personal Information</h3>
         <div className="grid md:grid-cols-2 gap-4">
           <Field label="Full Name" value={fullName} onChange={setFullName} placeholder="Your full name" />
           <Field label="Phone" value={phone} onChange={setPhone} placeholder="+91 9876543210" />
           <Field label="Company Name" value={companyName} onChange={setCompanyName} placeholder="Optional" />
-          <Field label="GSTIN" value={gstin} onChange={setGstin} placeholder="22AAAAA0000A1Z5" />
+          <div>
+            <label className="text-[11px] text-[#64748B] uppercase tracking-wider mb-1 block">Billing Country</label>
+            <select
+              value={billingCountry}
+              onChange={e => setBillingCountry(e.target.value)}
+              className="w-full rounded-xl px-3 py-2 bg-white/[0.03] border border-white/[0.08] text-sm text-[#E2E8F0] focus:border-primary focus:outline-none"
+            >
+              {COUNTRIES.map(c => (
+                <option key={c.code} value={c.code}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+          {billingCountry === 'IN' && (
+            <Field label="GSTIN" value={gstin} onChange={setGstin} placeholder="22AAAAA0000A1Z5" />
+          )}
           <div className="md:col-span-2">
-            <Field label="Billing Address" value={billingAddress} onChange={setBillingAddress} placeholder="Street, City, State, PIN" textarea />
+            <Field label="Billing Address" value={billingAddress} onChange={setBillingAddress} placeholder="Street, City, State, ZIP" textarea />
           </div>
           <div>
-            <label className="text-[11px] text-gray-500 uppercase tracking-wider mb-1 block">Timezone</label>
+            <label className="text-[11px] text-[#64748B] uppercase tracking-wider mb-1 block">Timezone</label>
             <select
               value={timezone}
               onChange={e => setTimezone(e.target.value)}
-              className="w-full rounded-lg px-3 py-2 bg-black/50 border border-white/10 text-sm text-white focus:border-primary focus:outline-none"
+              className="w-full rounded-xl px-3 py-2 bg-white/[0.03] border border-white/[0.08] text-sm text-[#E2E8F0] focus:border-primary focus:outline-none"
             >
               {TIMEZONES.map(tz => (
                 <option key={tz} value={tz}>{tz}</option>
@@ -160,7 +195,7 @@ function ProfileTab({ profile, userEmail, userId, saving, setSaving, setMessage 
         <button
           onClick={handleSaveProfile}
           disabled={saving}
-          className="mt-4 bg-primary hover:bg-primary-dark text-black font-bold py-2 px-6 rounded-lg text-sm transition-colors disabled:opacity-50"
+          className="mt-4 bg-gradient-to-r from-primary-dark to-primary text-white font-semibold py-2 px-6 rounded-lg text-sm transition-all disabled:opacity-50"
         >
           {saving ? 'Saving...' : 'Save Profile'}
         </button>
@@ -169,8 +204,8 @@ function ProfileTab({ profile, userEmail, userId, saving, setSaving, setMessage 
       {/* Bank details (hosts only) */}
       {isHost && (
         <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-5">
-          <h3 className="text-sm font-bold text-white mb-1">Payout Details</h3>
-          <p className="text-xs text-gray-500 mb-4">For receiving host earnings via bank transfer.</p>
+          <h3 className="text-sm font-bold text-[#E2E8F0] mb-1">Payout Details</h3>
+          <p className="text-xs text-[#64748B] mb-4">For receiving host earnings via bank transfer.</p>
           <div className="grid md:grid-cols-2 gap-4">
             <Field label="Account Holder Name" value={bankName} onChange={setBankName} placeholder="As on bank account" />
             <Field label="IFSC Code" value={bankIfsc} onChange={setBankIfsc} placeholder="SBIN0001234" />
@@ -181,7 +216,7 @@ function ProfileTab({ profile, userEmail, userId, saving, setSaving, setMessage 
           <button
             onClick={handleSaveBank}
             disabled={saving}
-            className="mt-4 bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-6 rounded-lg text-sm transition-colors disabled:opacity-50"
+            className="mt-4 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-[#94A3B8] font-semibold py-2 px-6 rounded-lg text-sm transition-all disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save Bank Details'}
           </button>
@@ -224,13 +259,13 @@ function NotificationsTab({ profile, saving, setSaving, setMessage }: any) {
 
   return (
     <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-5">
-      <h3 className="text-sm font-bold text-white mb-4">Email Notifications</h3>
+      <h3 className="text-sm font-bold text-[#E2E8F0] mb-4">Email Notifications</h3>
       <div className="space-y-4">
         {toggles.map(t => (
           <div key={t.label} className="flex items-center justify-between py-2">
             <div>
-              <div className="text-sm text-white">{t.label}</div>
-              <div className="text-xs text-gray-500">{t.desc}</div>
+              <div className="text-sm text-[#E2E8F0]">{t.label}</div>
+              <div className="text-xs text-[#64748B]">{t.desc}</div>
             </div>
             <button
               type="button"
@@ -245,7 +280,7 @@ function NotificationsTab({ profile, saving, setSaving, setMessage }: any) {
       <button
         onClick={handleSave}
         disabled={saving}
-        className="mt-6 bg-primary hover:bg-primary-dark text-black font-bold py-2 px-6 rounded-lg text-sm transition-colors disabled:opacity-50"
+        className="mt-6 bg-gradient-to-r from-primary-dark to-primary text-white font-semibold py-2 px-6 rounded-lg text-sm transition-all disabled:opacity-50"
       >
         {saving ? 'Saving...' : 'Save Preferences'}
       </button>
@@ -276,31 +311,31 @@ function DangerTab({ profile, userEmail, saving, setSaving, setMessage }: any) {
     <div className="space-y-4">
       {/* KYC status */}
       <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-5">
-        <h3 className="text-sm font-bold text-white mb-3">Verification Status</h3>
+        <h3 className="text-sm font-bold text-[#E2E8F0] mb-3">Verification Status</h3>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-gray-400">KYC Status</span>
-            <span className={profile?.kyc_status === 'completed' ? 'text-green-400' : 'text-yellow-400'}>
+            <span className="text-[#94A3B8]">KYC Status</span>
+            <span className={profile?.kyc_status === 'completed' ? 'text-primary' : 'text-yellow-400'}>
               {profile?.kyc_status === 'completed' ? 'Completed' : 'Pending'}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-400">Phone Verified</span>
-            <span className={profile?.phone_verified ? 'text-green-400' : 'text-gray-500'}>
+            <span className="text-[#94A3B8]">Phone Verified</span>
+            <span className={profile?.phone_verified ? 'text-primary' : 'text-[#64748B]'}>
               {profile?.phone_verified ? 'Yes' : 'No'}
             </span>
           </div>
           {currentRole === 'host' && (
             <div className="flex justify-between">
-              <span className="text-gray-400">PAN Verified</span>
-              <span className={profile?.pan_verified ? 'text-green-400' : 'text-gray-500'}>
+              <span className="text-[#94A3B8]">PAN Verified</span>
+              <span className={profile?.pan_verified ? 'text-primary' : 'text-[#64748B]'}>
                 {profile?.pan_verified ? 'Yes' : 'No'}
               </span>
             </div>
           )}
           <div className="flex justify-between">
-            <span className="text-gray-400">Trust Tier</span>
-            <span className="text-gray-300 capitalize">{profile?.kyc_tier || 'none'}</span>
+            <span className="text-[#94A3B8]">Trust Tier</span>
+            <span className="text-[#E2E8F0] capitalize">{profile?.kyc_tier || 'none'}</span>
           </div>
         </div>
       </div>
@@ -308,9 +343,9 @@ function DangerTab({ profile, userEmail, saving, setSaving, setMessage }: any) {
       {/* Switch role */}
       <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-5">
         <h3 className="text-sm font-bold text-yellow-400 mb-1">Switch Account Role</h3>
-        <p className="text-xs text-gray-400 mb-3">
-          You are currently a <span className="text-white font-medium capitalize">{currentRole}</span>.
-          Switch to <span className="text-white font-medium capitalize">{targetRole}</span> to{' '}
+        <p className="text-xs text-[#94A3B8] mb-3">
+          You are currently a <span className="text-[#E2E8F0] font-medium capitalize">{currentRole}</span>.
+          Switch to <span className="text-[#E2E8F0] font-medium capitalize">{targetRole}</span> to{' '}
           {targetRole === 'host' ? 'start providing GPUs' : 'rent GPUs from the marketplace'}.
           {targetRole === 'host' && ' You may need to complete PAN verification.'}
         </p>
@@ -332,7 +367,7 @@ function DangerTab({ profile, userEmail, saving, setSaving, setMessage }: any) {
             </button>
             <button
               onClick={() => setConfirmSwitch(false)}
-              className="text-xs text-gray-500 hover:text-gray-300"
+              className="text-xs text-[#64748B] hover:text-[#E2E8F0]"
             >
               Cancel
             </button>
@@ -343,7 +378,7 @@ function DangerTab({ profile, userEmail, saving, setSaving, setMessage }: any) {
       {/* Delete account */}
       <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-5">
         <h3 className="text-sm font-bold text-red-400 mb-1">Delete Account</h3>
-        <p className="text-xs text-gray-400 mb-3">
+        <p className="text-xs text-[#94A3B8] mb-3">
           Permanently delete your account and all associated data. This cannot be undone.
           You must withdraw all funds first.
         </p>
@@ -361,10 +396,10 @@ function DangerTab({ profile, userEmail, saving, setSaving, setMessage }: any) {
 function Field({ label, value, onChange, placeholder, textarea }: {
   label: string; value: string; onChange: (v: string) => void; placeholder?: string; textarea?: boolean;
 }) {
-  const cls = "w-full rounded-lg px-3 py-2 bg-black/50 border border-white/10 text-sm text-white focus:border-primary focus:outline-none placeholder:text-gray-600";
+  const cls = "w-full rounded-xl px-3 py-2 bg-white/[0.03] border border-white/[0.08] text-sm text-[#E2E8F0] focus:border-primary focus:outline-none placeholder:text-[#475569]";
   return (
     <div>
-      <label className="text-[11px] text-gray-500 uppercase tracking-wider mb-1 block">{label}</label>
+      <label className="text-[11px] text-[#64748B] uppercase tracking-wider mb-1 block">{label}</label>
       {textarea ? (
         <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={2} className={cls} />
       ) : (

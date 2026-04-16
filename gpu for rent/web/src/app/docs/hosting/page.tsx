@@ -19,18 +19,18 @@ const hostGaps = [
 
 export default function HostingPage() {
   return (
-    <article className="space-y-12 text-gray-300">
+    <article className="space-y-12 text-[#E2E8F0]">
       <header className="space-y-3">
         <p className="text-sm font-medium uppercase tracking-widest text-primary/90">For Providers</p>
-        <h1 className="text-3xl font-bold tracking-tight text-white md:text-4xl">Become a Provider</h1>
-        <p className="max-w-2xl text-lg leading-relaxed text-gray-400">
+        <h1 className="text-3xl font-bold font-heading tracking-tight text-white md:text-4xl">Become a Provider</h1>
+        <p className="max-w-2xl text-lg leading-relaxed text-[#94A3B8]">
           Monetize idle GPUs with automated per-minute billing—plus what is still evolving for
           providers.
         </p>
       </header>
 
       <section className="space-y-4">
-        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-white">
+        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold font-heading text-white">
           Overview <StatusBadge kind="live" />
         </h2>
         <ul className="list-disc space-y-2 pl-5 leading-relaxed">
@@ -41,7 +41,7 @@ export default function HostingPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-white">
+        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold font-heading text-white">
           XP &amp; Provider Tiers <StatusBadge kind="live" />
         </h2>
         <p className="leading-relaxed">
@@ -55,7 +55,7 @@ export default function HostingPage() {
           <li><span className="text-white">Platinum (15,000 XP):</span> 7% platform fee</li>
           <li><span className="text-white">Diamond (50,000 XP):</span> 5% platform fee</li>
         </ul>
-        <p className="leading-relaxed text-sm text-gray-400">
+        <p className="leading-relaxed text-sm text-[#94A3B8]">
           XP is granted automatically: +10 XP per hour of successfully hosted compute, +50 XP for
           machine verification, +200 XP for 30-day perfect uptime streaks, +25 XP per completed
           referral.
@@ -63,7 +63,7 @@ export default function HostingPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-white">
+        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold font-heading text-white">
           Requirements <StatusBadge kind="live" />
         </h2>
         <DocTable
@@ -82,7 +82,7 @@ export default function HostingPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-white">
+        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold font-heading text-white">
           Listing Your Machine <StatusBadge kind="live" />
         </h2>
         <ol className="list-decimal space-y-3 pl-5 leading-relaxed">
@@ -96,7 +96,7 @@ export default function HostingPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-white">
+        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold font-heading text-white">
           Verification Tiers <StatusBadge kind="live" />
         </h2>
         <ul className="list-disc space-y-2 pl-5 leading-relaxed">
@@ -115,7 +115,7 @@ export default function HostingPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-white">
+        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold font-heading text-white">
           Host Agent <StatusBadge kind="live" />
         </h2>
         <p className="leading-relaxed">
@@ -145,7 +145,7 @@ python agent.py --self-test`}
       </section>
 
       <section className="space-y-4">
-        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-white">
+        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold font-heading text-white">
           GPU Slicing <StatusBadge kind="live" />
         </h2>
         <ul className="list-disc space-y-2 pl-5 leading-relaxed">
@@ -158,7 +158,7 @@ python agent.py --self-test`}
       </section>
 
       <section className="space-y-4">
-        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-white">
+        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold font-heading text-white">
           Maintenance Windows <StatusBadge kind="live" />
         </h2>
         <p className="leading-relaxed">
@@ -168,7 +168,7 @@ python agent.py --self-test`}
       </section>
 
       <section className="space-y-4">
-        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-white">
+        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold font-heading text-white">
           What&apos;s NOT Built Yet for Hosts <StatusBadge kind="planned" />
         </h2>
         <WarningBox title="Provider roadmap gaps">
@@ -179,7 +179,7 @@ python agent.py --self-test`}
           </ul>
         </WarningBox>
         <InfoBox>
-          <p className="text-gray-300">
+          <p className="text-[#E2E8F0]">
             Treat earnings and operational tooling as evolving. Verify payout and analytics behavior
             in your environment before relying on it for finance workflows.
           </p>

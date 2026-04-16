@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import Razorpay from 'razorpay'
 import { createClient } from '@/utils/supabase/server'
+import { USD_TO_INR } from '@/lib/currency'
 
 export async function POST(request: Request) {
   try {
@@ -12,15 +13,17 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { amountInr } = body
+    const { amountUsd } = body
 
-    if (!amountInr || amountInr < 100) {
-      return NextResponse.json({ error: 'Minimum amount is ₹100' }, { status: 400 })
+    if (!amountUsd || amountUsd < 1) {
+      return NextResponse.json({ error: 'Minimum amount is $1' }, { status: 400 })
     }
 
-    if (amountInr > 100000) {
-      return NextResponse.json({ error: 'Maximum single top-up is ₹1,00,000' }, { status: 400 })
+    if (amountUsd > 1200) {
+      return NextResponse.json({ error: 'Maximum single top-up is $1,200' }, { status: 400 })
     }
+
+    const amountInr = Math.round(amountUsd * USD_TO_INR * 100) / 100
 
     const hasRazorpay = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET
 
@@ -32,24 +35,23 @@ export async function POST(request: Request) {
         )
       }
 
-      // Test mode: only allowed in development
       const { error: rpcError } = await supabase.rpc('credit_wallet', {
         p_user_id: user.id,
-        p_amount: amountInr,
+        p_amount: amountUsd,
       })
 
       if (rpcError) {
         const { data: current } = await supabase
           .from('users')
-          .select('wallet_balance_inr')
+          .select('wallet_balance_usd')
           .eq('id', user.id)
           .single()
 
-        const currentBalance = current?.wallet_balance_inr || 0
+        const currentBalance = current?.wallet_balance_usd || 0
 
         const { error: updateError } = await supabase
           .from('users')
-          .update({ wallet_balance_inr: currentBalance + amountInr })
+          .update({ wallet_balance_usd: currentBalance + amountUsd })
           .eq('id', user.id)
 
         if (updateError) {
@@ -59,15 +61,15 @@ export async function POST(request: Request) {
 
       await supabase.from('wallet_transactions').insert({
         user_id: user.id,
-        amount_inr: amountInr,
+        amount_usd: amountUsd,
         type: 'credit',
-        description: 'Wallet top-up (test mode)',
+        description: `Wallet top-up $${amountUsd} (test mode)`,
         payment_id: `test_${Date.now()}`,
       })
 
       return NextResponse.json({
         testMode: true,
-        message: `₹${amountInr} credited to wallet (dev test mode)`,
+        message: `$${amountUsd} credited to wallet (dev test mode)`,
       })
     }
 
@@ -77,10 +79,10 @@ export async function POST(request: Request) {
     })
 
     const order = await instance.orders.create({
-      amount: amountInr * 100,
+      amount: Math.round(amountInr * 100),
       currency: 'INR',
       receipt: `receipt_${Date.now()}`,
-      notes: { userId: user.id },
+      notes: { userId: user.id, amountUsd: String(amountUsd) },
     })
 
     return NextResponse.json({ order })

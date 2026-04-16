@@ -20,20 +20,20 @@ const notProduction = [
 
 export default function ServerlessPage() {
   return (
-    <article className="space-y-12 text-gray-300">
+    <article className="space-y-12 text-[#E2E8F0]">
       <header className="space-y-3">
         <p className="text-sm font-medium uppercase tracking-widest text-primary/90">Serverless</p>
-        <h1 className="text-3xl font-bold tracking-tight text-white md:text-4xl">
+        <h1 className="text-3xl font-bold font-heading tracking-tight text-white md:text-4xl">
           Serverless Inference
         </h1>
-        <p className="max-w-2xl text-lg leading-relaxed text-gray-400">
+        <p className="max-w-2xl text-lg leading-relaxed text-[#94A3B8]">
           Deploy models as API endpoints with routing and scaling—where the product is solid and
           where it is still maturing.
         </p>
       </header>
 
       <section className="space-y-4">
-        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-white">
+        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold font-heading text-white">
           Overview <StatusBadge kind="partial" />
         </h2>
         <p className="leading-relaxed">
@@ -43,7 +43,7 @@ export default function ServerlessPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">How It Works (Partial)</h2>
+        <h2 className="text-xl font-semibold font-heading text-white">How It Works (Partial)</h2>
         <DocTable
           headers={['Step', 'Status']}
           rows={[
@@ -56,7 +56,7 @@ export default function ServerlessPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Current State</h2>
+        <h2 className="text-xl font-semibold font-heading text-white">Current State</h2>
         <ul className="space-y-3 leading-relaxed">
           <li className="flex flex-wrap items-start gap-2">
             <StatusBadge kind="live" />
@@ -106,7 +106,7 @@ export default function ServerlessPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-white">
+        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold font-heading text-white">
           Python SDK <StatusBadge kind="live" />
         </h2>
         <CodeBlock>
@@ -121,7 +121,7 @@ result = client.generate(
       </section>
 
       <section className="space-y-4">
-        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-white">
+        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold font-heading text-white">
           What&apos;s NOT Production-Ready <StatusBadge kind="planned" />
         </h2>
         <WarningBox title="Operate with caution">
@@ -132,7 +132,7 @@ result = client.generate(
           </ul>
         </WarningBox>
         <InfoBox>
-          <p className="text-gray-300">
+          <p className="text-[#E2E8F0]">
             Use serverless inference for experiments and internal pilots until load testing,
             observability, and rate controls meet your production bar.
           </p>

@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { machineId, pricePerGpuHrInr, storagePricePerGbMonthInr, bandwidthUploadPricePerGbInr, bandwidthDownloadPricePerGbInr, minGpu, offerEndDate, interruptibleMinPriceInr, reservedDiscountFactor } = parsed.data;
+  const { machineId, pricePerGpuHrUsd, storagePricePerGbMonthUsd, bandwidthUploadPricePerGbUsd, bandwidthDownloadPricePerGbUsd, minGpu, offerEndDate, interruptibleMinPriceUsd, reservedDiscountFactor } = parsed.data;
   const autoPrice = body.autoPrice === true;
 
   const { data: machine, error: machineErr } = await supabase
@@ -69,13 +69,13 @@ export async function POST(request: Request) {
     .insert({
       machine_id: machineId,
       host_id: user.id,
-      price_per_gpu_hr_inr: pricePerGpuHrInr,
-      storage_price_per_gb_month_inr: storagePricePerGbMonthInr,
-      bandwidth_upload_price_per_gb_inr: bandwidthUploadPricePerGbInr,
-      bandwidth_download_price_per_gb_inr: bandwidthDownloadPricePerGbInr,
+      price_per_gpu_hr_usd: pricePerGpuHrUsd,
+      storage_price_per_gb_month_usd: storagePricePerGbMonthUsd,
+      bandwidth_upload_price_per_gb_usd: bandwidthUploadPricePerGbUsd,
+      bandwidth_download_price_per_gb_usd: bandwidthDownloadPricePerGbUsd,
       min_gpu: minGpu,
       offer_end_date: offerEndDate,
-      interruptible_min_price_inr: interruptibleMinPriceInr || null,
+      interruptible_min_price_usd: interruptibleMinPriceUsd || null,
       reserved_discount_factor: reservedDiscountFactor,
       auto_price: autoPrice,
     })
@@ -136,13 +136,13 @@ export async function PATCH(request: Request) {
   }
 
   const dbUpdates: Record<string, any> = {};
-  if (parsed.data.pricePerGpuHrInr !== undefined) dbUpdates.price_per_gpu_hr_inr = parsed.data.pricePerGpuHrInr;
-  if (parsed.data.storagePricePerGbMonthInr !== undefined) dbUpdates.storage_price_per_gb_month_inr = parsed.data.storagePricePerGbMonthInr;
-  if (parsed.data.bandwidthUploadPricePerGbInr !== undefined) dbUpdates.bandwidth_upload_price_per_gb_inr = parsed.data.bandwidthUploadPricePerGbInr;
-  if (parsed.data.bandwidthDownloadPricePerGbInr !== undefined) dbUpdates.bandwidth_download_price_per_gb_inr = parsed.data.bandwidthDownloadPricePerGbInr;
+  if (parsed.data.pricePerGpuHrUsd !== undefined) dbUpdates.price_per_gpu_hr_usd = parsed.data.pricePerGpuHrUsd;
+  if (parsed.data.storagePricePerGbMonthUsd !== undefined) dbUpdates.storage_price_per_gb_month_usd = parsed.data.storagePricePerGbMonthUsd;
+  if (parsed.data.bandwidthUploadPricePerGbUsd !== undefined) dbUpdates.bandwidth_upload_price_per_gb_usd = parsed.data.bandwidthUploadPricePerGbUsd;
+  if (parsed.data.bandwidthDownloadPricePerGbUsd !== undefined) dbUpdates.bandwidth_download_price_per_gb_usd = parsed.data.bandwidthDownloadPricePerGbUsd;
   if (parsed.data.minGpu !== undefined) dbUpdates.min_gpu = parsed.data.minGpu;
   if (parsed.data.offerEndDate !== undefined) dbUpdates.offer_end_date = parsed.data.offerEndDate;
-  if (parsed.data.interruptibleMinPriceInr !== undefined) dbUpdates.interruptible_min_price_inr = parsed.data.interruptibleMinPriceInr;
+  if (parsed.data.interruptibleMinPriceUsd !== undefined) dbUpdates.interruptible_min_price_usd = parsed.data.interruptibleMinPriceUsd;
   if (parsed.data.reservedDiscountFactor !== undefined) dbUpdates.reserved_discount_factor = parsed.data.reservedDiscountFactor;
 
   if (Object.keys(dbUpdates).length === 0) {
@@ -158,10 +158,10 @@ export async function PATCH(request: Request) {
 
   if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
 
-  if (dbUpdates.price_per_gpu_hr_inr) {
+  if (dbUpdates.price_per_gpu_hr_usd) {
     await supabase
       .from('machines')
-      .update({ price_per_hour_inr: dbUpdates.price_per_gpu_hr_inr })
+      .update({ price_per_hour_usd: dbUpdates.price_per_gpu_hr_usd })
       .eq('id', offer.machine_id);
   }
 

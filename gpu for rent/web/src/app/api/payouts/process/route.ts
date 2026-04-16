@@ -35,20 +35,20 @@ export async function POST(request: Request) {
     .update({ status: 'processing' })
     .eq('id', payoutId)
 
-  // In production, this would call Razorpay Route/Payout API
-  // For MVP, mark as paid and deduct from host wallet
-  const { data: host } = await supabase
-    .from('users')
-    .select('wallet_balance_inr')
-    .eq('id', payout.host_id)
-    .single()
+  const { error: debitError } = await supabase.rpc('debit_wallet', {
+    p_user_id: payout.host_id,
+    p_amount: payout.net_amount_usd,
+  })
 
-  if (host) {
-    const newBalance = Math.max(0, host.wallet_balance_inr - payout.net_amount_inr)
+  if (debitError) {
     await supabase
-      .from('users')
-      .update({ wallet_balance_inr: newBalance })
-      .eq('id', payout.host_id)
+      .from('host_payouts')
+      .update({ status: 'failed' })
+      .eq('id', payoutId)
+    return NextResponse.json(
+      { error: `Wallet debit failed: ${debitError.message}` },
+      { status: 500 }
+    )
   }
 
   await supabase

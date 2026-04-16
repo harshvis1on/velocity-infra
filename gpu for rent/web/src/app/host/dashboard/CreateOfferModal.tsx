@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { formatUSD } from '@/lib/currency'
 
 interface Machine {
   id: string;
@@ -135,7 +136,7 @@ export default function CreateOfferModal({ machines }: { machines: Machine[] }) 
     return (
       <button
         onClick={() => setOpen(true)}
-        className="bg-primary hover:bg-primary-dark text-black font-bold py-2 px-4 rounded-lg text-sm transition-colors"
+        className="bg-gradient-to-r from-primary-dark to-primary text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors"
       >
         Create Offer
       </button>
@@ -144,21 +145,21 @@ export default function CreateOfferModal({ machines }: { machines: Machine[] }) 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl w-full max-w-md mx-4 shadow-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-5 border-b border-white/10">
-          <h2 className="text-lg font-bold">List Machine on Marketplace</h2>
-          <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-white text-xl">&times;</button>
+      <div className="bg-[#0B0F19] border border-white/[0.06] rounded-2xl w-full max-w-md mx-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-5 border-b border-white/[0.06]">
+          <h2 className="text-lg font-bold font-heading text-[#E2E8F0]">List Machine on Marketplace</h2>
+          <button onClick={() => setOpen(false)} className="text-[#94A3B8] hover:text-[#E2E8F0] text-xl">&times;</button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {/* Machine selector */}
           <div>
-            <label className="text-xs text-gray-400 mb-1 block">Select Machine</label>
+            <label className="text-xs text-[#94A3B8] mb-1 block">Select Machine</label>
             <select
               value={machineId}
               onChange={e => handleMachineSelect(e.target.value)}
               required
-              className="w-full rounded-lg px-3 py-2.5 bg-black/50 border border-white/10 text-sm focus:border-primary focus:outline-none"
+              className="w-full rounded-xl px-3 py-2.5 bg-white/[0.03] border border-white/[0.08] text-sm text-[#E2E8F0] focus:border-primary focus:outline-none"
             >
               <option value="">Choose a machine...</option>
               {eligibleMachines.map(m => (
@@ -177,8 +178,8 @@ export default function CreateOfferModal({ machines }: { machines: Machine[] }) 
             <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-4">
               <div className="flex items-center justify-between mb-2">
                 <div>
-                  <div className="text-sm font-medium text-white">Auto-pricing</div>
-                  <div className="text-[11px] text-gray-500">Let Velocity set the optimal market price</div>
+                  <div className="text-sm font-medium text-[#E2E8F0]">Auto-pricing</div>
+                  <div className="text-[11px] text-[#64748B]">Let Velocity set the optimal market price</div>
                 </div>
                 <button
                   type="button"
@@ -194,9 +195,9 @@ export default function CreateOfferModal({ machines }: { machines: Machine[] }) 
               </div>
 
               {autoPrice && mp && (
-                <div className="text-xs text-gray-400">
-                  Market rate: <span className="text-primary font-mono font-bold">₹{suggested}/GPU/hr</span>
-                  <span className="text-gray-600 ml-2">(range ₹{mp.min}–₹{mp.max})</span>
+                <div className="text-xs text-[#94A3B8]">
+                  Market rate: <span className="text-primary font-mono font-bold">{formatUSD(suggested, { suffix: '/GPU/hr' })}</span>
+                  <span className="text-[#64748B] ml-2">(range {formatUSD(mp.min)}–{formatUSD(mp.max)})</span>
                 </div>
               )}
             </div>
@@ -205,11 +206,11 @@ export default function CreateOfferModal({ machines }: { machines: Machine[] }) 
           {/* Price — manual override */}
           {machineId && (
             <div>
-              <label className="text-xs text-gray-400 mb-1 block">
-                {autoPrice ? 'Current price (auto-managed)' : 'Price per GPU/hr (₹)'}
+              <label className="text-xs text-[#94A3B8] mb-1 block">
+                {autoPrice ? 'Current price (auto-managed)' : 'Price per GPU/hr ($)'}
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">₹</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8] text-sm">$</span>
                 <input
                   type="number"
                   step="0.50"
@@ -220,14 +221,14 @@ export default function CreateOfferModal({ machines }: { machines: Machine[] }) 
                     if (autoPrice) setAutoPrice(false);
                   }}
                   required
-                  className={`w-full rounded-lg pl-7 pr-3 py-2.5 bg-black/50 border text-sm text-white focus:outline-none font-mono text-lg transition-colors ${
-                    autoPrice ? 'border-primary/30 focus:border-primary' : 'border-white/10 focus:border-primary'
+                  className={`w-full rounded-xl pl-7 pr-3 py-2.5 bg-white/[0.03] border text-sm text-[#E2E8F0] focus:outline-none font-mono text-lg transition-colors ${
+                    autoPrice ? 'border-primary/30 focus:border-primary' : 'border-white/[0.08] focus:border-primary'
                   }`}
                 />
               </div>
               {!autoPrice && suggested > 0 && price !== suggested && (
                 <div className="flex items-center gap-2 mt-1.5">
-                  <span className="text-xs text-gray-500">Market rate: ₹{suggested}/hr</span>
+                  <span className="text-xs text-[#64748B]">Market rate: {formatUSD(suggested, { suffix: '/hr' })}</span>
                   <button
                     type="button"
                     onClick={() => { setPricePerGpuHr(String(suggested)); setAutoPrice(true); }}
@@ -241,19 +242,19 @@ export default function CreateOfferModal({ machines }: { machines: Machine[] }) 
               {/* Price preview */}
               {price > 0 && (
                 <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                  <div className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-2">
-                    <div className="text-[10px] text-blue-400 uppercase font-bold">On-Demand</div>
-                    <div className="font-mono text-sm text-white">₹{price.toFixed(0)}/hr</div>
+                  <div className="bg-primary/5 border border-primary/20 rounded-lg p-2">
+                    <div className="text-[10px] text-primary uppercase font-bold">On-Demand</div>
+                    <div className="font-mono text-sm text-[#E2E8F0]">{formatUSD(price, { decimals: 0, suffix: '/hr' })}</div>
                   </div>
-                  <div className="bg-green-500/5 border border-green-500/20 rounded-lg p-2">
-                    <div className="text-[10px] text-green-400 uppercase font-bold">Reserved</div>
-                    <div className="font-mono text-sm text-white">₹{reservedPrice.toFixed(0)}/hr</div>
-                    <div className="text-[9px] text-gray-500">-{reservedDiscount}%</div>
+                  <div className="bg-violet-500/5 border border-violet-500/20 rounded-lg p-2">
+                    <div className="text-[10px] text-violet-400 uppercase font-bold">Reserved</div>
+                    <div className="font-mono text-sm text-[#E2E8F0]">{formatUSD(reservedPrice, { decimals: 0, suffix: '/hr' })}</div>
+                    <div className="text-[9px] text-[#64748B]">-{reservedDiscount}%</div>
                   </div>
-                  <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-lg p-2">
-                    <div className="text-[10px] text-yellow-400 uppercase font-bold">Interruptible</div>
-                    <div className="font-mono text-sm text-white">₹{interruptPrice.toFixed(0)}/hr</div>
-                    <div className="text-[9px] text-gray-500">min floor</div>
+                  <div className="bg-indigo-500/5 border border-indigo-500/20 rounded-lg p-2">
+                    <div className="text-[10px] text-indigo-300 uppercase font-bold">Interruptible</div>
+                    <div className="font-mono text-sm text-[#E2E8F0]">{formatUSD(interruptPrice, { decimals: 0, suffix: '/hr' })}</div>
+                    <div className="text-[9px] text-[#64748B]">min floor</div>
                   </div>
                 </div>
               )}
@@ -263,7 +264,7 @@ export default function CreateOfferModal({ machines }: { machines: Machine[] }) 
           {/* Duration */}
           {machineId && (
             <div>
-              <label className="text-xs text-gray-400 mb-1 block">Listing Duration</label>
+              <label className="text-xs text-[#94A3B8] mb-1 block">Listing Duration</label>
               <div className="flex gap-2">
                 {[
                   { v: '7', l: '1 week' },
@@ -278,7 +279,7 @@ export default function CreateOfferModal({ machines }: { machines: Machine[] }) 
                     className={`flex-1 py-2 rounded-lg text-xs font-medium border transition-colors ${
                       durationDays === opt.v
                         ? 'bg-primary/10 border-primary/40 text-primary'
-                        : 'bg-black/30 border-white/10 text-gray-400 hover:border-white/20'
+                        : 'bg-white/[0.03] border-white/[0.08] text-[#94A3B8] hover:border-white/[0.15]'
                     }`}
                   >
                     {opt.l}
@@ -293,7 +294,7 @@ export default function CreateOfferModal({ machines }: { machines: Machine[] }) 
             <button
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="text-xs text-gray-500 hover:text-gray-300 flex items-center gap-1"
+              className="text-xs text-[#64748B] hover:text-[#94A3B8] flex items-center gap-1"
             >
               <svg className={`w-3 h-3 transition-transform ${showAdvanced ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
               Advanced pricing options
@@ -301,23 +302,23 @@ export default function CreateOfferModal({ machines }: { machines: Machine[] }) 
           )}
 
           {showAdvanced && (
-            <div className="space-y-3 pl-2 border-l-2 border-white/5">
+            <div className="space-y-3 pl-2 border-l-2 border-white/[0.06]">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] text-gray-500 mb-1 block">Storage (₹/GB/mo)</label>
+                  <label className="text-[11px] text-[#64748B] mb-1 block">Storage ($/GB/mo)</label>
                   <input
                     type="number" step="0.01" min="0"
                     value={storagePriceMonth}
                     onChange={e => setStoragePriceMonth(e.target.value)}
-                    className="w-full rounded px-2.5 py-1.5 bg-black/50 border border-white/10 text-xs text-white focus:border-primary focus:outline-none font-mono"
+                    className="w-full rounded-xl px-2.5 py-1.5 bg-white/[0.03] border border-white/[0.08] text-xs text-[#E2E8F0] focus:border-primary focus:outline-none font-mono"
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] text-gray-500 mb-1 block">Min GPUs per rental</label>
+                  <label className="text-[11px] text-[#64748B] mb-1 block">Min GPUs per rental</label>
                   <select
                     value={minGpu}
                     onChange={e => setMinGpu(e.target.value)}
-                    className="w-full rounded px-2.5 py-1.5 bg-black/50 border border-white/10 text-xs text-white focus:border-primary focus:outline-none"
+                    className="w-full rounded-xl px-2.5 py-1.5 bg-white/[0.03] border border-white/[0.08] text-xs text-[#E2E8F0] focus:border-primary focus:outline-none"
                   >
                     {[1, 2, 4, 8].filter(n => !selectedMachine || n <= selectedMachine.gpu_count).map(n => (
                       <option key={n} value={n}>{n} GPU{n > 1 ? 's' : ''}</option>
@@ -327,21 +328,21 @@ export default function CreateOfferModal({ machines }: { machines: Machine[] }) 
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] text-gray-500 mb-1 block">Interruptible floor (₹/hr)</label>
+                  <label className="text-[11px] text-[#64748B] mb-1 block">Interruptible floor ($/hr)</label>
                   <input
                     type="number" step="0.50" min="0"
                     value={interruptiblePrice}
                     onChange={e => setInterruptiblePrice(e.target.value)}
                     placeholder={`${(price * 0.5).toFixed(0)} (auto)`}
-                    className="w-full rounded px-2.5 py-1.5 bg-black/50 border border-white/10 text-xs text-white focus:border-primary focus:outline-none font-mono"
+                    className="w-full rounded-xl px-2.5 py-1.5 bg-white/[0.03] border border-white/[0.08] text-xs text-[#E2E8F0] focus:border-primary focus:outline-none font-mono"
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] text-gray-500 mb-1 block">Reserved discount</label>
+                  <label className="text-[11px] text-[#64748B] mb-1 block">Reserved discount</label>
                   <select
                     value={reservedDiscount}
                     onChange={e => setReservedDiscount(e.target.value)}
-                    className="w-full rounded px-2.5 py-1.5 bg-black/50 border border-white/10 text-xs text-white focus:border-primary focus:outline-none"
+                    className="w-full rounded-xl px-2.5 py-1.5 bg-white/[0.03] border border-white/[0.08] text-xs text-[#E2E8F0] focus:border-primary focus:outline-none"
                   >
                     {[10, 20, 30, 40, 50].map(n => (
                       <option key={n} value={n}>{n}% off</option>
@@ -353,20 +354,20 @@ export default function CreateOfferModal({ machines }: { machines: Machine[] }) 
           )}
 
           {error && <div className="p-2.5 bg-red-500/10 border border-red-500/20 rounded-lg text-xs text-red-400">{error}</div>}
-          {success && <div className="p-2.5 bg-green-500/10 border border-green-500/20 rounded-lg text-xs text-green-400">Listed! Your machine is now on the marketplace.</div>}
+          {success && <div className="p-2.5 bg-primary/10 border border-primary/20 rounded-lg text-xs text-primary">Listed! Your machine is now on the marketplace.</div>}
 
           <div className="flex gap-2 pt-1">
             <button
               type="submit"
               disabled={submitting || !machineId || !price}
-              className="flex-1 bg-primary hover:bg-primary-dark text-black font-bold py-2.5 rounded-lg transition-colors disabled:opacity-50 text-sm"
+              className="flex-1 bg-gradient-to-r from-primary-dark to-primary text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 text-sm"
             >
               {submitting ? 'Publishing...' : 'Publish Listing'}
             </button>
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-400 hover:text-white transition-colors"
+              className="px-4 py-2.5 bg-white/[0.04] border border-white/[0.08] rounded-lg text-sm text-[#94A3B8] hover:text-[#E2E8F0] transition-colors"
             >
               Cancel
             </button>

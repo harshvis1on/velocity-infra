@@ -49,52 +49,33 @@ export async function updateSession(request: NextRequest) {
   if (user && !isPublicRoute && !pathname.startsWith('/onboarding')) {
     const { data: profile } = await supabase
       .from('users')
-      .select('kyc_status, kyc_tier, is_banned, phone_verified, role')
+      .select('kyc_status, is_banned, role')
       .eq('id', user.id)
       .single()
 
     if (profile?.is_banned) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'
-      url.searchParams.set('error', 'Your account has been suspended. Contact support@velocity.infra')
+      url.searchParams.set('error', 'Your account has been suspended. Contact support@velocity.run')
       return NextResponse.redirect(url)
     }
 
-    if (profile && profile.kyc_status === 'pending') {
+    if (profile && profile.kyc_status !== 'completed') {
       const url = request.nextUrl.clone()
       url.pathname = '/onboarding'
       return NextResponse.redirect(url)
     }
 
-    // Renters must have phone verified to use console
-    if (pathname.startsWith('/console')) {
-      if (profile?.role === 'host') {
-        const url = request.nextUrl.clone()
-        url.pathname = '/host/dashboard'
-        return NextResponse.redirect(url)
-      }
-      if (!profile?.phone_verified) {
-        const url = request.nextUrl.clone()
-        url.pathname = '/onboarding'
-        url.searchParams.set('message', 'Please verify your phone number to access the GPU marketplace.')
-        return NextResponse.redirect(url)
-      }
+    if (pathname.startsWith('/console') && profile?.role === 'host') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/host/dashboard'
+      return NextResponse.redirect(url)
     }
 
-    // Hosts must have full KYC (id_verified tier) to manage machines
-    if (pathname.startsWith('/host/dashboard') || pathname.startsWith('/host/datacenter-apply')) {
-      if (profile?.role === 'renter') {
-        const url = request.nextUrl.clone()
-        url.pathname = '/console'
-        return NextResponse.redirect(url)
-      }
-      const tier = profile?.kyc_tier || 'none'
-      if (tier !== 'id_verified' && tier !== 'enterprise') {
-        const url = request.nextUrl.clone()
-        url.pathname = '/onboarding'
-        url.searchParams.set('message', 'Hosts must complete PAN verification to list machines.')
-        return NextResponse.redirect(url)
-      }
+    if ((pathname.startsWith('/host/dashboard') || pathname.startsWith('/host/datacenter-apply')) && profile?.role === 'renter') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/console'
+      return NextResponse.redirect(url)
     }
   }
 

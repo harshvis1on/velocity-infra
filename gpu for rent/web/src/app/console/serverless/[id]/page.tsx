@@ -170,7 +170,7 @@ export default function EndpointDetailPage() {
   }
 
   if (loading) {
-    return <div className="p-8 text-center text-gray-400 animate-pulse">Loading endpoint details...</div>;
+    return <div className="p-8 text-center text-[#94A3B8] animate-pulse">Loading endpoint details...</div>;
   }
 
   if (!endpoint) return null;
@@ -181,7 +181,7 @@ export default function EndpointDetailPage() {
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
-      <div className="mb-6 flex items-center text-sm text-gray-400">
+      <div className="mb-6 flex items-center text-sm text-[#94A3B8]">
         <Link href="/console/serverless" className="hover:text-white flex items-center transition-colors">
           <ArrowLeft className="h-4 w-4 mr-1" /> Back to Endpoints
         </Link>
@@ -198,16 +198,16 @@ export default function EndpointDetailPage() {
           <div className="flex items-center space-x-3 mb-2">
             <h1 className="text-3xl font-bold">{endpoint.name}</h1>
             <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-              endpoint.status === 'active' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 
-              'bg-white/10 text-gray-400 border border-white/10'
+              endpoint.status === 'active' ? 'bg-primary/[0.15] text-primary border border-primary/30' : 
+              'bg-white/10 text-[#94A3B8] border border-white/[0.06]'
             }`}>
               {endpoint.status.toUpperCase()}
             </span>
           </div>
-          <p className="text-gray-400 font-mono text-sm">ID: {endpoint.id}</p>
+          <p className="text-[#94A3B8] font-mono text-sm">ID: {endpoint.id}</p>
         </div>
         <div className="flex space-x-3">
-          <button className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors h-10 px-4 py-2 border border-white/10 hover:bg-white/5 text-white">
+          <button className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors h-10 px-4 py-2 border border-white/[0.06] hover:bg-white/5 text-white">
             <Settings className="h-4 w-4 mr-2" /> Configure
           </button>
           <button
@@ -225,31 +225,31 @@ export default function EndpointDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-[#1A1A1A] border border-white/10 rounded-xl p-6">
+        <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-gray-400 font-medium">Active Workers</h3>
+            <h3 className="text-[#94A3B8] font-medium">Active Workers</h3>
             <Server className="h-5 w-5 text-primary" />
           </div>
           <div className="flex items-baseline space-x-2">
             <span className="text-3xl font-bold text-white">{activeWorkers}</span>
-            <span className="text-sm text-gray-500">/ {endpoint.max_workers} max</span>
+            <span className="text-sm text-[#64748B]">/ {endpoint.max_workers} max</span>
           </div>
         </div>
         
-        <div className="bg-[#1A1A1A] border border-white/10 rounded-xl p-6">
+        <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-gray-400 font-medium">Total Load</h3>
-            <Activity className="h-5 w-5 text-green-400" />
+            <h3 className="text-[#94A3B8] font-medium">Total Load</h3>
+            <Activity className="h-5 w-5 text-primary" />
           </div>
           <div className="flex items-baseline space-x-2">
             <span className="text-3xl font-bold text-white">{totalLoad.toFixed(1)}</span>
-            <span className="text-sm text-gray-500">reqs/sec</span>
+            <span className="text-sm text-[#64748B]">reqs/sec</span>
           </div>
         </div>
 
-        <div className="bg-[#1A1A1A] border border-white/10 rounded-xl p-6">
+        <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-gray-400 font-medium">Target Util</h3>
+            <h3 className="text-[#94A3B8] font-medium">Target Util</h3>
             <Cpu className="h-5 w-5 text-purple-400" />
           </div>
           <div className="flex items-baseline space-x-2">
@@ -257,9 +257,9 @@ export default function EndpointDetailPage() {
           </div>
         </div>
 
-        <div className="bg-[#1A1A1A] border border-white/10 rounded-xl p-6">
+        <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-gray-400 font-medium">Avg Queue Time</h3>
+            <h3 className="text-[#94A3B8] font-medium">Avg Queue Time</h3>
             <Network className="h-5 w-5 text-orange-400" />
           </div>
           <div className="flex items-baseline space-x-2">
@@ -268,7 +268,7 @@ export default function EndpointDetailPage() {
                 ? (workers.reduce((sum, w) => sum + (w.queue_time || 0), 0) / workers.length).toFixed(2) 
                 : '0.00'}
             </span>
-            <span className="text-sm text-gray-500">sec</span>
+            <span className="text-sm text-[#64748B]">sec</span>
           </div>
         </div>
       </div>
@@ -276,28 +276,28 @@ export default function EndpointDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           {!hasWorkerGroup ? (
-            <div className="bg-[#1A1A1A] border border-white/10 border-dashed rounded-xl p-12 text-center">
-              <HardDrive className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+            <div className="bg-white/[0.03] border border-white/[0.06] border-dashed rounded-xl p-12 text-center">
+              <HardDrive className="h-12 w-12 text-[#64748B] mx-auto mb-4" />
               <h3 className="text-xl font-medium text-white mb-2">No workergroup configured</h3>
-              <p className="text-gray-400 mb-6 max-w-md mx-auto">
+              <p className="text-[#94A3B8] mb-6 max-w-md mx-auto">
                 To start serving requests, configure a workergroup that defines which Docker template and GPUs to use.
               </p>
-              <button className="inline-flex items-center justify-center rounded-lg text-sm font-bold transition-colors h-10 px-4 py-2 bg-primary hover:bg-primary-dark text-black">
+              <button className="inline-flex items-center justify-center rounded-lg text-sm font-semibold transition-colors h-10 px-4 py-2 bg-gradient-to-r from-primary-dark to-primary text-white">
                 Configure Workergroup
               </button>
             </div>
           ) : (
-            <div className="bg-[#1A1A1A] border border-white/10 rounded-xl overflow-hidden">
-              <div className="p-6 border-b border-white/10">
+            <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl overflow-hidden">
+              <div className="p-6 border-b border-white/[0.06]">
                 <h3 className="text-lg font-semibold text-white">Live Workers</h3>
               </div>
               <div className="p-0">
                 {workers.length === 0 ? (
-                  <div className="p-8 text-center text-gray-500">No workers currently provisioned.</div>
+                  <div className="p-8 text-center text-[#64748B]">No workers currently provisioned.</div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                      <thead className="bg-white/5 text-gray-400">
+                      <thead className="bg-white/5 text-[#94A3B8]">
                         <tr>
                           <th className="px-6 py-3 font-medium">Worker ID</th>
                           <th className="px-6 py-3 font-medium">State</th>
@@ -306,23 +306,23 @@ export default function EndpointDetailPage() {
                           <th className="px-6 py-3 font-medium">Last Update</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-white/10">
+                      <tbody className="divide-y divide-white/[0.06]">
                         {workers.map((worker) => (
                           <tr key={worker.id} className="hover:bg-white/5 transition-colors">
-                            <td className="px-6 py-4 font-mono text-xs text-gray-300">{worker.id.substring(0, 8)}...</td>
+                            <td className="px-6 py-4 font-mono text-xs text-[#E2E8F0]">{worker.id.substring(0, 8)}...</td>
                             <td className="px-6 py-4">
                               <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                                worker.state === 'active' ? 'bg-green-500/10 text-green-400' :
-                                worker.state === 'recruiting' ? 'bg-primary/10 text-primary' :
+                                worker.state === 'active' ? 'bg-primary/[0.15] text-primary' :
+                                worker.state === 'recruiting' ? 'bg-amber-400/10 text-amber-400' :
                                 worker.state === 'releasing' ? 'bg-orange-500/10 text-orange-400' :
-                                'bg-white/10 text-gray-400'
+                                'bg-white/10 text-[#94A3B8]'
                               }`}>
                                 {worker.state}
                               </span>
                             </td>
-                            <td className="px-6 py-4 text-gray-300">{(worker.current_load || 0).toFixed(2)}</td>
-                            <td className="px-6 py-4 text-gray-300">{(worker.queue_time || 0).toFixed(3)}s</td>
-                            <td className="px-6 py-4 text-gray-500">
+                            <td className="px-6 py-4 text-[#E2E8F0]">{(worker.current_load || 0).toFixed(2)}</td>
+                            <td className="px-6 py-4 text-[#E2E8F0]">{(worker.queue_time || 0).toFixed(3)}s</td>
+                            <td className="px-6 py-4 text-[#64748B]">
                               {worker.last_metrics_at ? new Date(worker.last_metrics_at).toLocaleTimeString() : 'Never'}
                             </td>
                           </tr>
@@ -335,23 +335,23 @@ export default function EndpointDetailPage() {
             </div>
           )}
 
-          <div className="bg-[#1A1A1A] border border-white/10 rounded-xl overflow-hidden">
-            <div className="p-6 border-b border-white/10">
+          <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl overflow-hidden">
+            <div className="p-6 border-b border-white/[0.06]">
               <h3 className="text-lg font-semibold text-white">Integration Code</h3>
             </div>
             <div className="p-6">
-              <div className="bg-black rounded-lg p-4 overflow-x-auto border border-white/10">
-                <pre className="text-sm font-mono text-gray-300">
+              <div className="bg-[#080D16] rounded-lg p-4 overflow-x-auto border border-white/[0.06]">
+                <pre className="text-sm font-mono text-[#E2E8F0]">
                   <code className="text-pink-400">from</code> velocity <code className="text-pink-400">import</code> VelocityClient{'\n\n'}
-                  <code className="text-gray-500"># Initialize the client</code>{'\n'}
+                  <code className="text-[#64748B]"># Initialize the client</code>{'\n'}
                   client = VelocityClient({'\n'}
-                  {'    '}api_key=<code className="text-green-400">"YOUR_API_KEY"</code>,{'\n'}
-                  {'    '}endpoint_id=<code className="text-green-400">"{endpoint.id}"</code>{'\n'}
+                  {'    '}api_key=<code className="text-primary-light">"YOUR_API_KEY"</code>,{'\n'}
+                  {'    '}endpoint_id=<code className="text-primary-light">"{endpoint.id}"</code>{'\n'}
                   ){'\n\n'}
-                  <code className="text-gray-500"># Send a generation request</code>{'\n'}
+                  <code className="text-[#64748B]"># Send a generation request</code>{'\n'}
                   response = client.generate({'{'}{'\n'}
-                  {'    '}<code className="text-green-400">"prompt"</code>: <code className="text-green-400">"Explain quantum computing in simple terms."</code>,{'\n'}
-                  {'    '}<code className="text-green-400">"max_tokens"</code>: <code className="text-primary">512</code>{'\n'}
+                  {'    '}<code className="text-primary-light">"prompt"</code>: <code className="text-primary-light">"Explain quantum computing in simple terms."</code>,{'\n'}
+                  {'    '}<code className="text-primary-light">"max_tokens"</code>: <code className="text-primary">512</code>{'\n'}
                   {'}'}){'\n\n'}
                   <code className="text-primary">print</code>(response)
                 </pre>
@@ -361,18 +361,18 @@ export default function EndpointDetailPage() {
         </div>
 
         <div className="space-y-8">
-          <div className="bg-[#1A1A1A] border border-white/10 rounded-xl overflow-hidden sticky top-8">
-            <div className="p-6 border-b border-white/10">
+          <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl overflow-hidden sticky top-8">
+            <div className="p-6 border-b border-white/[0.06]">
               <h3 className="text-lg font-semibold text-white flex items-center">
                 <Play className="h-4 w-4 mr-2 text-primary" /> Test Endpoint
               </h3>
-              <p className="text-sm text-gray-400 mt-1">Send a test request to your active workers</p>
+              <p className="text-sm text-[#94A3B8] mt-1">Send a test request to your active workers</p>
             </div>
             <div className="p-6 space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">JSON Payload</label>
+                <label className="text-sm font-medium text-[#E2E8F0]">JSON Payload</label>
                 <textarea 
-                  className="w-full h-32 bg-black border border-white/10 rounded-lg p-3 text-sm font-mono text-gray-300 focus:ring-1 focus:ring-primary focus:border-primary outline-none resize-y"
+                  className="w-full h-32 bg-[#080D16] border border-white/[0.08] rounded-xl p-3 text-sm font-mono text-[#E2E8F0] focus:ring-1 focus:ring-primary focus:border-primary outline-none resize-y"
                   value={testPayload}
                   onChange={(e) => setTestPayload(e.target.value)}
                   spellCheck={false}
@@ -380,17 +380,17 @@ export default function EndpointDetailPage() {
               </div>
               <button 
                 onClick={handleTest} 
-                className="inline-flex items-center justify-center rounded-lg text-sm font-bold transition-colors h-10 px-4 py-2 w-full bg-primary hover:bg-primary-dark text-black disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center rounded-lg text-sm font-semibold transition-colors h-10 px-4 py-2 w-full bg-gradient-to-r from-primary-dark to-primary text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isTesting || !hasWorkerGroup}
               >
                 {isTesting ? 'Sending...' : 'Send Request'}
               </button>
               
               {testResult && (
-                <div className="pt-4 border-t border-white/10 mt-4">
-                  <label className="text-sm font-medium text-gray-300 mb-2 block">Response</label>
-                  <div className="bg-black border border-white/10 rounded-lg p-3 max-h-64 overflow-y-auto">
-                    <pre className="text-xs font-mono text-gray-400 whitespace-pre-wrap break-words">
+                <div className="pt-4 border-t border-white/[0.06] mt-4">
+                  <label className="text-sm font-medium text-[#E2E8F0] mb-2 block">Response</label>
+                  <div className="bg-[#080D16] border border-white/[0.06] rounded-lg p-3 max-h-64 overflow-y-auto">
+                    <pre className="text-xs font-mono text-[#94A3B8] whitespace-pre-wrap break-words">
                       {testResult}
                     </pre>
                   </div>

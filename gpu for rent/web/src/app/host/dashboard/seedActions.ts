@@ -21,7 +21,7 @@ export async function seedDummyMachines() {
       vcpu_count: 16,
       storage_gb: 500,
       location: 'Mumbai, MH',
-      price_per_hour_inr: 35.00,
+      price_per_hour_usd: 35.00,
       status: 'available',
     },
     {
@@ -33,7 +33,7 @@ export async function seedDummyMachines() {
       vcpu_count: 32,
       storage_gb: 1000,
       location: 'Bangalore, KA',
-      price_per_hour_inr: 45.00,
+      price_per_hour_usd: 45.00,
       status: 'available',
     },
     {
@@ -45,7 +45,7 @@ export async function seedDummyMachines() {
       vcpu_count: 64,
       storage_gb: 2000,
       location: 'Pune, MH',
-      price_per_hour_inr: 440.00,
+      price_per_hour_usd: 440.00,
       status: 'available',
     },
     {
@@ -57,7 +57,7 @@ export async function seedDummyMachines() {
       vcpu_count: 128,
       storage_gb: 4000,
       location: 'Delhi, DL',
-      price_per_hour_inr: 1760.00,
+      price_per_hour_usd: 1760.00,
       status: 'available',
     },
     {
@@ -69,7 +69,7 @@ export async function seedDummyMachines() {
       vcpu_count: 32,
       storage_gb: 500,
       location: 'Chennai, KA',
-      price_per_hour_inr: 95.00,
+      price_per_hour_usd: 95.00,
       status: 'available',
     }
   ]

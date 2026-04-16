@@ -9,25 +9,25 @@ export const metadata: Metadata = {
 
 export default function ApiDocsPage() {
   return (
-    <article className="space-y-12 text-gray-300">
+    <article className="space-y-12 text-[#E2E8F0]">
       <header className="space-y-3">
         <p className="text-sm font-medium uppercase tracking-widest text-primary/90">Tools</p>
-        <h1 className="text-3xl font-bold tracking-tight text-white md:text-4xl">API Reference</h1>
+        <h1 className="text-3xl font-bold font-heading tracking-tight text-white md:text-4xl">API Reference</h1>
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge kind="live" />
-          <p className="max-w-2xl text-lg leading-relaxed text-gray-400">
+          <p className="max-w-2xl text-lg leading-relaxed text-[#94A3B8]">
             Live via Supabase REST and custom Next.js routes.
           </p>
         </div>
       </header>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Authentication</h2>
+        <h2 className="text-xl font-semibold font-heading text-white">Authentication</h2>
         <p className="leading-relaxed">All API requests require one of:</p>
         <ul className="list-disc space-y-2 pl-5 leading-relaxed">
           <li>Supabase session cookie (web console)</li>
           <li>
-            Supabase API key in <code className="text-primary/95">Authorization</code> header (CLI /
+            Supabase API key in <code className="text-primary/95 font-mono">Authorization</code> header (CLI /
             SDK)
           </li>
           <li>Service role key for admin operations</li>
@@ -35,11 +35,11 @@ export default function ApiDocsPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Renter APIs</h2>
-        <div className="overflow-x-auto rounded-lg border border-white/10">
+        <h2 className="text-xl font-semibold font-heading text-white">Renter APIs</h2>
+        <div className="overflow-x-auto rounded-xl border border-white/[0.06]">
           <table className="w-full min-w-[720px] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-white/10 bg-white/[0.03]">
+              <tr className="border-b border-white/[0.06] bg-white/[0.03]">
                 {['Method', 'Endpoint', 'Body', 'Response', 'Status'].map((h) => (
                   <th key={h} className="px-3 py-3 font-semibold text-white">
                     {h}
@@ -50,7 +50,7 @@ export default function ApiDocsPage() {
             <tbody>
               <tr className="border-b border-white/5">
                 <td className="px-3 py-3 font-mono text-primary/95">POST</td>
-                <td className="px-3 py-3 font-mono text-xs text-gray-200">/api/console/rent</td>
+                <td className="px-3 py-3 font-mono text-xs text-[#E2E8F0]">/api/console/rent</td>
                 <td className="px-3 py-3 text-xs">
                   offerId, gpuCount, templateId, diskSize, launchMode, rentalType, bidPriceInr?,
                   sshKeyId?
@@ -60,7 +60,7 @@ export default function ApiDocsPage() {
               </tr>
               <tr className="border-b border-white/5">
                 <td className="px-3 py-3 font-mono text-primary/95">POST</td>
-                <td className="px-3 py-3 font-mono text-xs text-gray-200">
+                <td className="px-3 py-3 font-mono text-xs text-[#E2E8F0]">
                   /api/billing/create-order
                 </td>
                 <td className="px-3 py-3 text-xs">{`{ amount }`}</td>
@@ -69,7 +69,7 @@ export default function ApiDocsPage() {
               </tr>
               <tr className="border-b border-white/5 last:border-0">
                 <td className="px-3 py-3 font-mono text-primary/95">POST</td>
-                <td className="px-3 py-3 font-mono text-xs text-gray-200">/api/billing/webhook</td>
+                <td className="px-3 py-3 font-mono text-xs text-[#E2E8F0]">/api/billing/webhook</td>
                 <td className="px-3 py-3 text-xs">Razorpay signature payload</td>
                 <td className="px-3 py-3">Credits wallet</td>
                 <td className="px-3 py-3">✅</td>
@@ -80,7 +80,7 @@ export default function ApiDocsPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Host APIs</h2>
+        <h2 className="text-xl font-semibold font-heading text-white">Host APIs</h2>
         <DocTable
           headers={['Method', 'Endpoint', 'Body', 'Response', 'Status']}
           rows={[
@@ -104,7 +104,7 @@ export default function ApiDocsPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Serverless APIs</h2>
+        <h2 className="text-xl font-semibold font-heading text-white">Serverless APIs</h2>
         <DocTable
           headers={['Method', 'Endpoint', 'Body', 'Response', 'Status']}
           rows={[
@@ -124,7 +124,7 @@ export default function ApiDocsPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-white">
+        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold font-heading text-white">
           What&apos;s missing from the API <StatusBadge kind="planned" />
         </h2>
         <WarningBox>

@@ -20,7 +20,7 @@ export async function addMachine(formData: FormData) {
     vcpu_count: parseInt(formData.get('vcpu_count') as string, 10),
     storage_gb: parseInt(formData.get('storage_gb') as string, 10),
     location: formData.get('location') as string,
-    price_per_hour_inr: parseFloat(formData.get('price_per_hour_inr') as string),
+    price_per_hour_usd: parseFloat(formData.get('price_per_hour_usd') as string),
     storage_price_per_gb_hr: parseFloat(formData.get('storage_price_per_gb_hr') as string || '0.00014'),
     min_gpu: parseInt(formData.get('min_gpu') as string || '1', 10),
   }
@@ -43,7 +43,7 @@ export async function addMachine(formData: FormData) {
       vcpu_count: parsed.data.vcpu_count,
       storage_gb: parsed.data.storage_gb,
       location: parsed.data.location,
-      price_per_hour_inr: parsed.data.price_per_hour_inr,
+      price_per_hour_usd: parsed.data.price_per_hour_usd,
       storage_price_per_gb_hr: parsed.data.storage_price_per_gb_hr,
       min_gpu: parsed.data.min_gpu,
       status: 'available',
@@ -62,8 +62,8 @@ export async function addMachine(formData: FormData) {
       .insert({
         machine_id: machine.id,
         host_id: user.id,
-        price_per_gpu_hr_inr: parsed.data.price_per_hour_inr,
-        storage_price_per_gb_month_inr: parsed.data.storage_price_per_gb_hr * 24 * 30,
+        price_per_gpu_hr_usd: parsed.data.price_per_hour_usd,
+        storage_price_per_gb_month_usd: parsed.data.storage_price_per_gb_hr * 24 * 30,
         min_gpu: parsed.data.min_gpu,
         offer_end_date: new Date(offerEndDateStr).toISOString(),
       })
@@ -90,12 +90,12 @@ export async function createOffer(formData: FormData) {
 
   const raw = {
     machineId: formData.get('machine_id') as string,
-    pricePerGpuHrInr: parseFloat(formData.get('price_per_gpu_hr_inr') as string),
-    storagePricePerGbMonthInr: parseFloat(formData.get('storage_price_per_gb_month_inr') as string || '4.5'),
+    pricePerGpuHrUsd: parseFloat(formData.get('price_per_gpu_hr_usd') as string),
+    storagePricePerGbMonthUsd: parseFloat(formData.get('storage_price_per_gb_month_usd') as string || '4.5'),
     minGpu: parseInt(formData.get('min_gpu') as string || '1', 10),
     offerEndDate: formData.get('offer_end_date') as string,
-    interruptibleMinPriceInr: formData.get('interruptible_min_price_inr')
-      ? parseFloat(formData.get('interruptible_min_price_inr') as string)
+    interruptibleMinPriceUsd: formData.get('interruptible_min_price_usd')
+      ? parseFloat(formData.get('interruptible_min_price_usd') as string)
       : undefined,
     reservedDiscountFactor: parseFloat(formData.get('reserved_discount_factor') as string || '0.4'),
   }
@@ -105,7 +105,7 @@ export async function createOffer(formData: FormData) {
     throw new Error(parsed.error.issues.map(i => i.message).join(', '))
   }
 
-  const { machineId, pricePerGpuHrInr, storagePricePerGbMonthInr, minGpu, offerEndDate, interruptibleMinPriceInr, reservedDiscountFactor } = parsed.data
+  const { machineId, pricePerGpuHrUsd, storagePricePerGbMonthUsd, minGpu, offerEndDate, interruptibleMinPriceUsd, reservedDiscountFactor } = parsed.data
 
   const { data: machine } = await supabase
     .from('machines')
@@ -138,11 +138,11 @@ export async function createOffer(formData: FormData) {
     .insert({
       machine_id: machineId,
       host_id: user.id,
-      price_per_gpu_hr_inr: pricePerGpuHrInr,
-      storage_price_per_gb_month_inr: storagePricePerGbMonthInr,
+      price_per_gpu_hr_usd: pricePerGpuHrUsd,
+      storage_price_per_gb_month_usd: storagePricePerGbMonthUsd,
       min_gpu: minGpu,
       offer_end_date: offerEndDate,
-      interruptible_min_price_inr: interruptibleMinPriceInr || null,
+      interruptible_min_price_usd: interruptibleMinPriceUsd || null,
       reserved_discount_factor: reservedDiscountFactor,
       auto_price: autoPrice,
     })
@@ -227,7 +227,7 @@ export async function updateMachinePricing(machineId: string, formData: FormData
 
   if (!user) throw new Error('You must be logged in.')
 
-  const pricePerHourInr = parseFloat(formData.get('price_per_hour_inr') as string)
+  const pricePerHourUsd = parseFloat(formData.get('price_per_hour_usd') as string)
   const storagePricePerGbHr = parseFloat(formData.get('storage_price_per_gb_hr') as string)
   const offerEndDateStr = formData.get('offer_end_date') as string
   const offerEndDate = offerEndDateStr ? new Date(offerEndDateStr).toISOString() : null
@@ -235,7 +235,7 @@ export async function updateMachinePricing(machineId: string, formData: FormData
   const { error } = await supabase
     .from('machines')
     .update({
-      price_per_hour_inr: pricePerHourInr,
+      price_per_hour_usd: pricePerHourUsd,
       storage_price_per_gb_hr: storagePricePerGbHr,
       offer_end_date: offerEndDate
     })

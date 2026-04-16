@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { offerId, gpuCount, templateId, diskSize, launchMode, rentalType, bidPriceInr, sshKeyId, newSshKey } = parsed.data;
+  const { offerId, gpuCount, templateId, diskSize, launchMode, rentalType, bidPriceUsd, sshKeyId, newSshKey } = parsed.data;
 
   const { data: offer, error: offerErr } = await supabaseAdmin
     .from('offers')
@@ -75,11 +75,11 @@ export async function POST(request: Request) {
   }
 
   if (rentalType === 'interruptible') {
-    if (!bidPriceInr) {
+    if (!bidPriceUsd) {
       return NextResponse.json({ error: 'Bid price required for interruptible rental' }, { status: 400 });
     }
-    if (offer.interruptible_min_price_inr && bidPriceInr < offer.interruptible_min_price_inr) {
-      return NextResponse.json({ error: `Bid must be at least ₹${offer.interruptible_min_price_inr}/GPU/hr` }, { status: 400 });
+    if (offer.interruptible_min_price_usd && bidPriceUsd < offer.interruptible_min_price_usd) {
+      return NextResponse.json({ error: `Bid must be at least $${offer.interruptible_min_price_usd}/GPU/hr` }, { status: 400 });
     }
   }
 
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
 
   const { data: profile } = await supabaseAdmin
     .from('users')
-    .select('wallet_balance_inr')
+    .select('wallet_balance_usd')
     .eq('id', user.id)
     .single();
 
@@ -105,17 +105,17 @@ export async function POST(request: Request) {
 
   let effectivePrice: number;
   if (rentalType === 'interruptible') {
-    effectivePrice = bidPriceInr!;
+    effectivePrice = bidPriceUsd!;
   } else if (rentalType === 'reserved' && offer.reserved_discount_factor) {
-    effectivePrice = offer.price_per_gpu_hr_inr * (1 - offer.reserved_discount_factor);
+    effectivePrice = offer.price_per_gpu_hr_usd * (1 - offer.reserved_discount_factor);
   } else {
-    effectivePrice = offer.price_per_gpu_hr_inr;
+    effectivePrice = offer.price_per_gpu_hr_usd;
   }
   const estimatedHourlyCost = effectivePrice * gpuCount;
 
-  if (profile.wallet_balance_inr < estimatedHourlyCost) {
+  if (profile.wallet_balance_usd < estimatedHourlyCost) {
     return NextResponse.json(
-      { error: `Insufficient balance. Need ₹${estimatedHourlyCost.toFixed(2)}/hr, have ₹${profile.wallet_balance_inr.toFixed(2)}` },
+      { error: `Insufficient balance. Need $${estimatedHourlyCost.toFixed(2)}/hr, have $${profile.wallet_balance_usd.toFixed(2)}` },
       { status: 402 }
     );
   }
@@ -170,12 +170,12 @@ export async function POST(request: Request) {
       renter_id: user.id,
       gpu_count: gpuCount,
       gpu_indices: gpuIndices,
-      price_per_gpu_hr_inr: effectivePrice,
-      storage_price_per_gb_month_inr: offer.storage_price_per_gb_month_inr,
-      bandwidth_upload_price_per_gb_inr: offer.bandwidth_upload_price_per_gb_inr,
-      bandwidth_download_price_per_gb_inr: offer.bandwidth_download_price_per_gb_inr,
+      price_per_gpu_hr_usd: effectivePrice,
+      storage_price_per_gb_month_usd: offer.storage_price_per_gb_month_usd,
+      bandwidth_upload_price_per_gb_usd: offer.bandwidth_upload_price_per_gb_usd,
+      bandwidth_download_price_per_gb_usd: offer.bandwidth_download_price_per_gb_usd,
       rental_type: rentalType,
-      bid_price_inr: bidPriceInr || null,
+      bid_price_usd: bidPriceUsd || null,
       rental_end_date: offer.offer_end_date,
     })
     .select()
@@ -199,7 +199,7 @@ export async function POST(request: Request) {
       gpu_indices: gpuIndices,
       launch_mode: launchMode,
       rental_type: rentalType,
-      bid_price_inr: bidPriceInr || null,
+      bid_price_usd: bidPriceUsd || null,
       ssh_public_key: finalSshKey,
     })
     .select()

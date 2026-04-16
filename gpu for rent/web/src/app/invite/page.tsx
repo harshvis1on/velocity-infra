@@ -37,7 +37,7 @@ export default function InvitePage() {
 
       const { data: profile } = await supabase
         .from('users')
-        .select('referral_code, referral_credits_earned_inr')
+        .select('referral_code, referral_credits_earned_usd')
         .eq('id', user.id)
         .single();
 
@@ -51,7 +51,7 @@ export default function InvitePage() {
 
       setStats({
         invited: count || 0,
-        creditsEarned: Number(profile?.referral_credits_earned_inr || 0),
+        creditsEarned: Number(profile?.referral_credits_earned_usd || 0),
       });
 
       setLoading(false);
@@ -76,7 +76,7 @@ export default function InvitePage() {
 
   if (loading) {
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center bg-[#060606]">
+      <div className="min-h-[100dvh] flex items-center justify-center bg-[#0B0F19]">
         <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -84,17 +84,17 @@ export default function InvitePage() {
 
   if (!referralCode) {
     return (
-      <div className="min-h-[100dvh] flex bg-[#060606]">
+      <div className="min-h-[100dvh] flex bg-[#0B0F19]">
         <div className="hidden lg:flex lg:w-[45%] relative flex-col justify-center p-16 overflow-hidden">
           <div className="absolute inset-0 opacity-[0.03]" style={{
             backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
             backgroundSize: '60px 60px',
           }} />
           <div className="relative z-10 max-w-md">
-            <h1 className="text-5xl font-extrabold text-white leading-[1.05] tracking-tight mb-6 anim-fadeUp">
+            <h1 className="text-5xl font-extrabold text-white leading-[1.05] tracking-tight mb-6 anim-fadeUp font-heading">
               Share compute.<br /><span className="text-primary">Earn compute.</span>
             </h1>
-            <p className="text-gray-400 text-lg leading-relaxed anim-fadeUp anim-delay-1">
+            <p className="text-[#94A3B8] text-lg leading-relaxed anim-fadeUp anim-delay-1">
               Invite friends to Velocity. When they rent their first GPU, you both earn 1 hour of free compute.
             </p>
           </div>
@@ -102,9 +102,9 @@ export default function InvitePage() {
         <div className="flex-1 flex items-center justify-center px-6 lg:border-l lg:border-white/[0.06]">
           <div className="text-center max-w-sm">
             <div className="w-12 h-12 rounded-xl bg-yellow-400/10 flex items-center justify-center text-2xl mx-auto mb-6 anim-fadeUp">🎁</div>
-            <h2 className="text-2xl font-bold mb-3 anim-fadeUp anim-delay-1">Sign in to get your invite link</h2>
-            <p className="text-gray-500 text-sm mb-8 anim-fadeUp anim-delay-2">Create an account or sign in to start earning free GPU hours through referrals.</p>
-            <Link href="/login" className="inline-block bg-primary hover:bg-primary/90 text-black font-bold py-3 px-8 rounded-lg text-sm transition-all active:scale-[0.97] anim-fadeUp anim-delay-3">
+            <h2 className="text-2xl font-bold mb-3 anim-fadeUp anim-delay-1 font-heading">Sign in to get your invite link</h2>
+            <p className="text-[#64748B] text-sm mb-8 anim-fadeUp anim-delay-2">Create an account or sign in to start earning free GPU hours through referrals.</p>
+            <Link href="/login" className="inline-block bg-gradient-to-r from-primary-dark to-primary text-white font-semibold py-3 px-8 rounded-lg text-sm shadow-glow transition-all active:scale-[0.97] anim-fadeUp anim-delay-3 hover:shadow-glow-lg hover:translate-y-[-1px]">
               Sign In to Continue
             </Link>
           </div>
@@ -114,7 +114,7 @@ export default function InvitePage() {
   }
 
   return (
-    <main className="min-h-[100dvh] bg-[#060606] text-white" style={{ fontFamily: 'var(--font-sans, Outfit, sans-serif)' }}>
+    <main className="min-h-[100dvh] bg-[#0B0F19] text-white">
       {/* HERO */}
       <section ref={hero.ref} className={`pt-32 pb-20 relative ${hero.visible ? '' : 'opacity-0'}`}>
         <div className="absolute inset-0 opacity-[0.02]" style={{
@@ -124,28 +124,28 @@ export default function InvitePage() {
 
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className={`text-center mb-14 ${hero.visible ? 'anim-fadeUp' : ''}`}>
-            <div className="text-xs uppercase tracking-[0.3em] text-gray-500 mb-4">Referral Program</div>
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.05] mb-4">
+            <div className="text-[11px] uppercase tracking-[0.3em] text-[#475569] font-semibold mb-4">Referral Program</div>
+            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.05] mb-4 font-heading">
               Invite friends.<br /><span className="text-primary">Both earn free GPUs.</span>
             </h1>
-            <p className="text-gray-500 max-w-md mx-auto">
+            <p className="text-[#64748B] max-w-md mx-auto">
               Share your referral link. When someone rents their first GPU, you both receive 1 hour of free RTX 4090 compute.
             </p>
           </div>
 
           {/* Referral link card */}
-          <div className={`border border-white/[0.06] rounded-xl p-6 mb-6 ${hero.visible ? 'anim-fadeUp anim-delay-1' : 'opacity-0'}`}>
-            <div className="text-[10px] text-gray-600 uppercase tracking-[0.15em] mb-3 font-medium">Your Referral Link</div>
+          <div className={`bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6 mb-6 ${hero.visible ? 'anim-fadeUp anim-delay-1' : 'opacity-0'}`}>
+            <div className="text-[11px] text-[#475569] uppercase tracking-[0.15em] mb-3 font-semibold">Your Referral Link</div>
             <div className="flex items-center gap-3">
-              <div className="flex-1 bg-white/[0.03] border border-white/[0.06] rounded-lg px-4 py-3 text-sm text-gray-400 overflow-x-auto scrollbar-hide tabular-nums">
+              <div className="flex-1 bg-white/[0.03] border border-white/[0.06] rounded-xl px-4 py-3 text-sm text-[#94A3B8] overflow-x-auto scrollbar-hide font-mono tabular-nums">
                 {referralLink || '...'}
               </div>
               <button
                 onClick={copyLink}
-                className={`shrink-0 font-bold py-3 px-6 rounded-lg text-sm transition-all active:scale-[0.97] ${
+                className={`shrink-0 font-semibold py-3 px-6 rounded-lg text-sm transition-all active:scale-[0.97] ${
                   copied
                     ? 'bg-primary/10 text-primary border border-primary/20'
-                    : 'bg-primary hover:bg-primary/90 text-black'
+                    : 'bg-gradient-to-r from-primary-dark to-primary text-white shadow-glow hover:shadow-glow-lg hover:translate-y-[-1px]'
                 }`}
               >
                 {copied ? 'Copied!' : 'Copy Link'}
@@ -165,23 +165,23 @@ export default function InvitePage() {
                 href={item.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="border border-white/[0.06] rounded-xl p-4 text-center hover:border-white/[0.12] transition-all group"
+                className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 text-center hover:border-primary/30 transition-all group"
               >
                 <div className="text-xl mb-1 group-hover:scale-110 transition-transform">{item.icon}</div>
-                <div className="text-[11px] text-gray-600">{item.label}</div>
+                <div className="text-[11px] text-[#475569]">{item.label}</div>
               </a>
             ))}
           </div>
 
           {/* Stats */}
           <div className={`grid grid-cols-2 gap-4 ${hero.visible ? 'anim-fadeUp anim-delay-3' : 'opacity-0'}`}>
-            <div className="border border-white/[0.06] rounded-xl p-6 text-center">
-              <div className="text-3xl font-bold text-white mb-1 tabular-nums">{stats.invited}</div>
-              <div className="text-[11px] text-gray-600 uppercase tracking-wider">Friends Invited</div>
+            <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6 text-center">
+              <div className="text-3xl font-bold text-white mb-1 font-mono tabular-nums">{stats.invited}</div>
+              <div className="text-[11px] text-[#475569] uppercase tracking-wider font-semibold">Friends Invited</div>
             </div>
-            <div className="border border-white/[0.06] rounded-xl p-6 text-center">
-              <div className="text-3xl font-bold text-primary mb-1 tabular-nums">₹{stats.creditsEarned}</div>
-              <div className="text-[11px] text-gray-600 uppercase tracking-wider">Credits Earned</div>
+            <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6 text-center">
+              <div className="text-3xl font-bold text-primary mb-1 font-mono tabular-nums">${stats.creditsEarned}</div>
+              <div className="text-[11px] text-[#475569] uppercase tracking-wider font-semibold">Credits Earned</div>
             </div>
           </div>
         </div>
@@ -190,7 +190,7 @@ export default function InvitePage() {
       {/* HOW IT WORKS */}
       <section ref={howSection.ref} className={`py-20 border-t border-white/[0.04] ${howSection.visible ? '' : 'opacity-0'}`}>
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className={`text-3xl font-bold mb-10 ${howSection.visible ? 'anim-fadeUp' : ''}`}>
+          <h2 className={`text-3xl font-bold mb-10 font-heading ${howSection.visible ? 'anim-fadeUp' : ''}`}>
             How it <span className="text-primary">works</span>
           </h2>
           <div className="space-y-6">
@@ -205,9 +205,9 @@ export default function InvitePage() {
                 className="flex items-start gap-5 group"
                 style={howSection.visible ? { animation: `fadeUp 0.5s ${0.1 + i * 0.1}s cubic-bezier(0.16,1,0.3,1) both` } : { opacity: 0 }}
               >
-                <div className="text-xs font-bold text-gray-600 tabular-nums pt-0.5 shrink-0">{item.step}</div>
+                <div className="text-xs font-bold text-[#475569] font-mono tabular-nums pt-0.5 shrink-0">{item.step}</div>
                 <div className="flex-1 pb-6 border-b border-white/[0.04] group-last:border-0">
-                  <p className="text-sm text-gray-400">{item.text}</p>
+                  <p className="text-sm text-[#94A3B8]">{item.text}</p>
                 </div>
               </div>
             ))}

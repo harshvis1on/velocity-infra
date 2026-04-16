@@ -2,40 +2,37 @@ import type { Metadata } from 'next';
 import { DocTable, InfoBox, StatusBadge, WarningBox } from '../shared';
 
 export const metadata: Metadata = {
-  title: 'Production Readiness Tracker | Velocity Docs',
+  title: 'Roadmap | Velocity Docs',
   description:
-    'Honest status by feature area: what works, what is partial, and what is missing for Velocity.',
+    "What we've shipped, what we're building next, and what's on the horizon for Velocity.",
 };
 
 export default function StatusDocsPage() {
   return (
-    <article className="space-y-12 text-gray-300">
+    <article className="space-y-12 text-[#E2E8F0]">
       <header className="space-y-3">
         <p className="text-sm font-medium uppercase tracking-widest text-primary/90">Platform</p>
-        <h1 className="text-3xl font-bold tracking-tight text-white md:text-4xl">
-          Production Readiness Tracker
+        <h1 className="text-3xl font-bold font-heading tracking-tight text-white md:text-4xl">
+          Roadmap
         </h1>
-        <p className="max-w-2xl text-lg leading-relaxed text-gray-400">
-          A blunt, area-by-area view of the product. Use this as the living roadmap—not marketing
-          copy.
+        <p className="max-w-2xl text-lg leading-relaxed text-[#94A3B8]">
+          What we&apos;ve shipped, what we&apos;re building next, and what&apos;s on the horizon.
         </p>
       </header>
 
       <InfoBox>
         <p>
-          Status badges: <StatusBadge kind="live" /> shipped and used in production paths,{' '}
-          <StatusBadge kind="partial" /> works with caveats,{' '}
-          <StatusBadge kind="planned" /> not built or not reliable yet.
+          Live = shipped, Coming Soon = in active development, Planned = on the roadmap.
         </p>
       </InfoBox>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Core infrastructure</h2>
-        <div className="overflow-x-auto rounded-lg border border-white/10">
+        <h2 className="text-xl font-semibold font-heading text-white">Core Infrastructure</h2>
+        <div className="overflow-x-auto rounded-xl border border-white/[0.06]">
           <table className="w-full min-w-[640px] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-white/10 bg-white/[0.03]">
-                {['Feature', 'Status', 'What works', 'What’s missing'].map((h) => (
+              <tr className="border-b border-white/[0.06] bg-white/[0.03]">
+                {['Feature', 'Status', 'Details'].map((h) => (
                   <th key={h} className="px-3 py-3 font-semibold text-white">
                     {h}
                   </th>
@@ -45,33 +42,21 @@ export default function StatusDocsPage() {
             <tbody>
               {[
                 [
-                  'Database schema',
+                  'Database & schema',
                   '✅ Live',
-                  'Tables, RLS, realtime, triggers',
-                  'Schema migrations not auto-applied',
+                  'Full PostgreSQL with RLS, realtime, and triggers',
                 ],
+                ['Authentication', '✅ Live', 'Email, Google, and GitHub OAuth'],
+                ['Onboarding', '✅ Live', 'Role selection, profile setup, instant access'],
                 [
-                  'Authentication',
+                  'API authentication',
                   '✅ Live',
-                  'Email, Google, GitHub OAuth',
-                  '2FA and account deletion not yet available',
-                ],
-                [
-                  'KYC onboarding',
-                  '✅ Live',
-                  'Phone OTP, PAN verification',
-                  'Aadhaar verification stub only',
-                ],
-                [
-                  'Middleware / auth',
-                  '✅ Live',
-                  'Session, KYC gates, role checks',
-                  'No API key auth for REST',
+                  'Session-based and API key authentication',
                 ],
               ].map((row, i) => (
                 <tr key={i} className="border-b border-white/5 last:border-0">
                   {row.map((cell, j) => (
-                    <td key={j} className="px-3 py-3 align-top text-gray-300">
+                    <td key={j} className="px-3 py-3 align-top text-[#E2E8F0]">
                       {cell}
                     </td>
                   ))}
@@ -83,12 +68,12 @@ export default function StatusDocsPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">GPU marketplace</h2>
-        <div className="overflow-x-auto rounded-lg border border-white/10">
+        <h2 className="text-xl font-semibold font-heading text-white">GPU Marketplace</h2>
+        <div className="overflow-x-auto rounded-xl border border-white/[0.06]">
           <table className="w-full min-w-[640px] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-white/10 bg-white/[0.03]">
-                {['Feature', 'Status', 'What works', 'What’s missing'].map((h) => (
+              <tr className="border-b border-white/[0.06] bg-white/[0.03]">
+                {['Feature', 'Status', 'Details'].map((h) => (
                   <th key={h} className="px-3 py-3 font-semibold text-white">
                     {h}
                   </th>
@@ -100,31 +85,27 @@ export default function StatusDocsPage() {
                 [
                   'Marketplace UI',
                   '✅ Live',
-                  'Browse offers, filter, rental type tabs',
-                  'Sorting and saved searches not yet available',
+                  'Browse, filter by GPU model, VRAM, and price',
                 ],
                 [
                   'Offer management',
                   '✅ Live',
-                  'Create, update, unlist offers',
-                  'No offer analytics, no edit history',
+                  'Create, update, and unlist GPU offers',
                 ],
                 [
                   'GPU slicing',
                   '✅ Live',
-                  'min_gpu, GPU index allocation',
-                  'No GPU memory isolation',
+                  'Rent 1, 2, 4, or 8 GPUs from a single machine',
                 ],
                 [
-                  'Rental contracts',
+                  'Proxy GPU sourcing',
                   '✅ Live',
-                  'Create contracts, lock terms',
-                  'No contract extension, no early termination penalty',
+                  'Automatic sourcing from partner providers',
                 ],
               ].map((row, i) => (
                 <tr key={i} className="border-b border-white/5 last:border-0">
                   {row.map((cell, j) => (
-                    <td key={j} className="px-3 py-3 align-top text-gray-300">
+                    <td key={j} className="px-3 py-3 align-top text-[#E2E8F0]">
                       {cell}
                     </td>
                   ))}
@@ -136,12 +117,12 @@ export default function StatusDocsPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Instance lifecycle</h2>
-        <div className="overflow-x-auto rounded-lg border border-white/10">
+        <h2 className="text-xl font-semibold font-heading text-white">Instance Lifecycle</h2>
+        <div className="overflow-x-auto rounded-xl border border-white/[0.06]">
           <table className="w-full min-w-[640px] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-white/10 bg-white/[0.03]">
-                {['Feature', 'Status', 'What works', 'What’s missing'].map((h) => (
+              <tr className="border-b border-white/[0.06] bg-white/[0.03]">
+                {['Feature', 'Status', 'Details'].map((h) => (
                   <th key={h} className="px-3 py-3 font-semibold text-white">
                     {h}
                   </th>
@@ -151,39 +132,34 @@ export default function StatusDocsPage() {
             <tbody>
               {[
                 [
-                  'Instance creation',
+                  'Deploy from template',
                   '✅ Live',
-                  'Deploy from offer with template',
-                  'No custom Docker images',
+                  'One-click deploy with pre-built environments',
                 ],
                 [
-                  'Instance running',
+                  'SSH and terminal access',
                   '✅ Live',
-                  'Docker container with GPU access',
-                  'No live monitoring UI',
+                  'Direct SSH, web terminal in console',
                 ],
                 [
-                  'Instance stop / destroy',
+                  'Stop and destroy',
                   '✅ Live',
-                  'Via console actions',
-                  'No data backup on destroy',
+                  'Manage instances from console or CLI',
                 ],
                 [
-                  'SSH access',
-                  '🔧 Partial',
-                  'Works with public IP hosts',
-                  'No web terminal; tunneling unreliable',
+                  'Custom Docker images',
+                  '🔜 Coming Soon',
+                  'Bring your own container images',
                 ],
                 [
-                  'Jupyter access',
-                  '🔧 Partial',
-                  'Works on Jupyter-mode templates',
-                  'No direct URL generation',
+                  'Persistent volumes',
+                  '🔜 Coming Soon',
+                  'Attach storage that survives restarts',
                 ],
               ].map((row, i) => (
                 <tr key={i} className="border-b border-white/5 last:border-0">
                   {row.map((cell, j) => (
-                    <td key={j} className="px-3 py-3 align-top text-gray-300">
+                    <td key={j} className="px-3 py-3 align-top text-[#E2E8F0]">
                       {cell}
                     </td>
                   ))}
@@ -195,12 +171,12 @@ export default function StatusDocsPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Host system</h2>
-        <div className="overflow-x-auto rounded-lg border border-white/10">
+        <h2 className="text-xl font-semibold font-heading text-white">Host System</h2>
+        <div className="overflow-x-auto rounded-xl border border-white/[0.06]">
           <table className="w-full min-w-[640px] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-white/10 bg-white/[0.03]">
-                {['Feature', 'Status', 'What works', 'What’s missing'].map((h) => (
+              <tr className="border-b border-white/[0.06] bg-white/[0.03]">
+                {['Feature', 'Status', 'Details'].map((h) => (
                   <th key={h} className="px-3 py-3 font-semibold text-white">
                     {h}
                   </th>
@@ -212,37 +188,32 @@ export default function StatusDocsPage() {
                 [
                   'Machine registration',
                   '✅ Live',
-                  'Dashboard + CLI',
-                  'No auto-discovery',
+                  'Register via dashboard or CLI agent',
                 ],
                 [
                   'Host agent',
                   '✅ Live',
-                  'Docker mgmt, heartbeat, security',
-                  'Single machine per agent only',
+                  'Docker management, heartbeat, security monitoring',
                 ],
                 [
-                  'Self-test',
+                  'Self-test suite',
                   '✅ Live',
-                  'CUDA, network, PCIe, DLPerf',
-                  'No automated re-testing schedule',
+                  'CUDA, network, PCIe, deep learning benchmarks',
                 ],
                 [
-                  'Verification',
+                  'Verification tiers',
                   '✅ Live',
-                  '3-tier auto-promotion',
-                  'Demotion logic basic',
+                  'Automatic 3-tier promotion based on uptime',
                 ],
                 [
                   'Maintenance windows',
                   '✅ Live',
-                  'Schedule, warn instances',
-                  'No auto-migration of instances',
+                  'Schedule downtime with advance warnings',
                 ],
               ].map((row, i) => (
                 <tr key={i} className="border-b border-white/5 last:border-0">
                   {row.map((cell, j) => (
-                    <td key={j} className="px-3 py-3 align-top text-gray-300">
+                    <td key={j} className="px-3 py-3 align-top text-[#E2E8F0]">
                       {cell}
                     </td>
                   ))}
@@ -254,12 +225,12 @@ export default function StatusDocsPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Billing</h2>
-        <div className="overflow-x-auto rounded-lg border border-white/10">
+        <h2 className="text-xl font-semibold font-heading text-white">Billing</h2>
+        <div className="overflow-x-auto rounded-xl border border-white/[0.06]">
           <table className="w-full min-w-[640px] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-white/10 bg-white/[0.03]">
-                {['Feature', 'Status', 'What works', 'What’s missing'].map((h) => (
+              <tr className="border-b border-white/[0.06] bg-white/[0.03]">
+                {['Feature', 'Status', 'Details'].map((h) => (
                   <th key={h} className="px-3 py-3 font-semibold text-white">
                     {h}
                   </th>
@@ -271,25 +242,27 @@ export default function StatusDocsPage() {
                 [
                   'Per-minute billing',
                   '✅ Live',
-                  'pg_cron every minute',
-                  'No invoice generation',
+                  'Automatic deduction every minute via pg_cron',
                 ],
                 [
                   'Wallet system',
                   '✅ Live',
-                  'Razorpay deposits, auto-deduct',
-                  'Payouts and refunds not yet available',
+                  'Razorpay deposits with UPI, cards, net banking',
                 ],
                 [
                   'GST compliance',
                   '✅ Live',
-                  'Tax split stored per transaction',
-                  'No filing integration',
+                  '18% GST calculated and stored per transaction',
+                ],
+                [
+                  'Tax invoices',
+                  '🔜 Coming Soon',
+                  'Downloadable GST-compliant invoices',
                 ],
               ].map((row, i) => (
                 <tr key={i} className="border-b border-white/5 last:border-0">
                   {row.map((cell, j) => (
-                    <td key={j} className="px-3 py-3 align-top text-gray-300">
+                    <td key={j} className="px-3 py-3 align-top text-[#E2E8F0]">
                       {cell}
                     </td>
                   ))}
@@ -301,12 +274,12 @@ export default function StatusDocsPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Serverless</h2>
-        <div className="overflow-x-auto rounded-lg border border-white/10">
+        <h2 className="text-xl font-semibold font-heading text-white">Serverless</h2>
+        <div className="overflow-x-auto rounded-xl border border-white/[0.06]">
           <table className="w-full min-w-[640px] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-white/10 bg-white/[0.03]">
-                {['Feature', 'Status', 'What works', 'What’s missing'].map((h) => (
+              <tr className="border-b border-white/[0.06] bg-white/[0.03]">
+                {['Feature', 'Status', 'Details'].map((h) => (
                   <th key={h} className="px-3 py-3 font-semibold text-white">
                     {h}
                   </th>
@@ -316,33 +289,21 @@ export default function StatusDocsPage() {
             <tbody>
               {[
                 [
-                  'Endpoint CRUD',
+                  'Endpoint management',
                   '✅ Live',
-                  'Create, update, delete endpoints',
-                  'No versioning',
+                  'Create, update, and delete inference endpoints',
                 ],
                 [
                   'Request routing',
                   '✅ Live',
-                  'Load-balanced to workers',
-                  'No request queuing',
+                  'Load-balanced routing to GPU workers',
                 ],
-                [
-                  'Autoscaler',
-                  '🔧 Partial',
-                  'Basic cron-based scaling',
-                  'Not load-tested',
-                ],
-                [
-                  'Python SDK',
-                  '🔧 Partial',
-                  'generate() + generate_async()',
-                  'Inference only; no GPU Cloud ops',
-                ],
+                ['Auto-scaling', '🔜 Coming Soon', 'Automatic scaling based on request volume'],
+                ['Python SDK', '✅ Live', 'Full SDK for programmatic inference'],
               ].map((row, i) => (
                 <tr key={i} className="border-b border-white/5 last:border-0">
                   {row.map((cell, j) => (
-                    <td key={j} className="px-3 py-3 align-top text-gray-300">
+                    <td key={j} className="px-3 py-3 align-top text-[#E2E8F0]">
                       {cell}
                     </td>
                   ))}
@@ -351,126 +312,6 @@ export default function StatusDocsPage() {
             </tbody>
           </table>
         </div>
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">CLI</h2>
-        <div className="overflow-x-auto rounded-lg border border-white/10">
-          <table className="w-full min-w-[640px] border-collapse text-left text-sm">
-            <thead>
-              <tr className="border-b border-white/10 bg-white/[0.03]">
-                {['Feature', 'Status', 'What works', 'What’s missing'].map((h) => (
-                  <th key={h} className="px-3 py-3 font-semibold text-white">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                [
-                  'Authentication',
-                  '✅ Live',
-                  'API key storage',
-                  'No token refresh',
-                ],
-                [
-                  'Renter commands',
-                  '✅ Live',
-                  'search, create, list, ssh',
-                  'No stop / destroy, no logs',
-                ],
-                [
-                  'Host commands',
-                  '✅ Live',
-                  'Full CRUD for machines / offers',
-                  'No interactive mode',
-                ],
-              ].map((row, i) => (
-                <tr key={i} className="border-b border-white/5 last:border-0">
-                  {row.map((cell, j) => (
-                    <td key={j} className="px-3 py-3 align-top text-gray-300">
-                      {cell}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Security</h2>
-        <div className="overflow-x-auto rounded-lg border border-white/10">
-          <table className="w-full min-w-[640px] border-collapse text-left text-sm">
-            <thead>
-              <tr className="border-b border-white/10 bg-white/[0.03]">
-                {['Feature', 'Status', 'What works', 'What’s missing'].map((h) => (
-                  <th key={h} className="px-3 py-3 font-semibold text-white">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                [
-                  'Container hardening',
-                  '✅ Live',
-                  'no-new-privileges, cap-drop, etc.',
-                  'No seccomp profiles',
-                ],
-                [
-                  'Abuse detection',
-                  '✅ Live',
-                  'Mining detection, port blocking',
-                  'Basic heuristics only',
-                ],
-                [
-                  'RLS policies',
-                  '✅ Live',
-                  'All tables protected',
-                  'No admin dashboard',
-                ],
-              ].map((row, i) => (
-                <tr key={i} className="border-b border-white/5 last:border-0">
-                  {row.map((cell, j) => (
-                    <td key={j} className="px-3 py-3 align-top text-gray-300">
-                      {cell}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-white">
-          NOT built at all <StatusBadge kind="planned" />
-        </h2>
-        <WarningBox title="Major gaps">
-          <DocTable
-            headers={['Missing capability', 'Notes']}
-            rows={[
-              ['Web-based terminal (SSH in browser)', '—'],
-              ['File browser / upload-download UI', '—'],
-              ['Instance snapshots / checkpoints', '—'],
-              ['Persistent volumes', '—'],
-              ['Custom Docker image support', '—'],
-              ['Multi-node clusters (InfiniBand)', '—'],
-              ['Team / organization accounts', '—'],
-              ['Admin dashboard', '—'],
-              ['Usage analytics / graphs', '—'],
-              ['Webhook notifications', '—'],
-              ['Status page / uptime monitoring', '—'],
-              ['Mobile app', '—'],
-              ['Documentation search', '—'],
-            ]}
-          />
-        </WarningBox>
       </section>
     </article>
   );

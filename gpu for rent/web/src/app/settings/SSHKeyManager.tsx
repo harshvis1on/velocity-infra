@@ -40,9 +40,9 @@ export default function SSHKeyManager({ initialKeys }: { initialKeys: any[] }) {
   }
 
   return (
-    <div className="bg-white/5 border border-white/10 p-6 rounded-xl mt-6">
-      <h2 className="text-xl font-bold mb-6">SSH Keys</h2>
-      <p className="text-sm text-gray-400 mb-6">
+    <div className="bg-white/[0.03] border border-white/[0.06] p-6 rounded-xl mt-6">
+      <h2 className="text-xl font-heading font-bold text-[#E2E8F0] mb-6">SSH Keys</h2>
+      <p className="text-sm text-[#94A3B8] mb-6">
         Add your public SSH keys here. You can select them when deploying a new instance to enable secure access.
       </p>
       
@@ -54,28 +54,28 @@ export default function SSHKeyManager({ initialKeys }: { initialKeys: any[] }) {
         )}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-1">
-            <label className="text-xs text-gray-400 font-medium mb-1 block">Key Name</label>
+            <label className="text-xs text-[#64748B] font-medium mb-1 block">Key Name</label>
             <input 
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. My MacBook Pro" 
-              className="w-full bg-black/50 border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-primary focus:outline-none" 
+              className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-[#E2E8F0] focus:border-primary focus:outline-none placeholder:text-[#475569]" 
             />
           </div>
           <div className="md:col-span-2">
-            <label className="text-xs text-gray-400 font-medium mb-1 block">Public Key</label>
+            <label className="text-xs text-[#64748B] font-medium mb-1 block">Public Key</label>
             <input 
               value={publicKey}
               onChange={(e) => setPublicKey(e.target.value)}
               placeholder="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC..." 
-              className="w-full bg-black/50 border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-primary focus:outline-none font-mono" 
+              className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-[#E2E8F0] focus:border-primary focus:outline-none font-mono placeholder:text-[#475569]" 
             />
           </div>
         </div>
         <button 
           type="submit"
           disabled={loading}
-          className="bg-white/10 hover:bg-white/20 text-white text-xs font-bold py-2 px-4 rounded transition-colors disabled:opacity-50"
+          className="bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-[#94A3B8] text-xs font-bold py-2 px-4 rounded-lg transition-all disabled:opacity-50"
         >
           {loading ? 'Adding...' : 'Add SSH Key'}
         </button>
@@ -83,13 +83,13 @@ export default function SSHKeyManager({ initialKeys }: { initialKeys: any[] }) {
 
       <div className="space-y-4">
         {keys.length === 0 ? (
-          <div className="text-sm text-gray-500 text-center py-4">No SSH keys added yet.</div>
+          <div className="text-sm text-[#64748B] text-center py-4">No SSH keys added yet.</div>
         ) : (
           keys.map(key => (
-            <div key={key.id} className="p-4 border border-white/10 rounded bg-black/50 flex justify-between items-center">
+            <div key={key.id} className="p-4 border border-white/[0.06] rounded-xl bg-white/[0.03] flex justify-between items-center">
               <div>
-                <div className="text-sm font-medium text-white">{key.name}</div>
-                <div className="text-xs text-gray-500 font-mono mt-1">
+                <div className="text-sm font-medium text-[#E2E8F0]">{key.name}</div>
+                <div className="text-xs text-[#64748B] font-mono mt-1">
                   {key.public_key.substring(0, 30)}...{key.public_key.substring(key.public_key.length - 20)}
                 </div>
               </div>

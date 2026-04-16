@@ -34,17 +34,17 @@ const notBuilt = [
 
 export default function InstancesPage() {
   return (
-    <article className="space-y-12 text-gray-300">
+    <article className="space-y-12 text-[#E2E8F0]">
       <header className="space-y-3">
         <p className="text-sm font-medium uppercase tracking-widest text-primary/90">GPU Cloud</p>
-        <h1 className="text-3xl font-bold tracking-tight text-white md:text-4xl">GPU Instances</h1>
-        <p className="max-w-2xl text-lg leading-relaxed text-gray-400">
+        <h1 className="text-3xl font-bold font-heading tracking-tight text-white md:text-4xl">GPU Instances</h1>
+        <p className="max-w-2xl text-lg leading-relaxed text-[#94A3B8]">
           How instances are provisioned, billed, and connected—and where gaps remain.
         </p>
       </header>
 
       <section className="space-y-4">
-        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-white">
+        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold font-heading text-white">
           Overview <StatusBadge kind="live" />
         </h2>
         <ul className="list-disc space-y-2 pl-5 leading-relaxed">
@@ -57,7 +57,7 @@ export default function InstancesPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-white">
+        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold font-heading text-white">
           Instance Types <StatusBadge kind="live" />
         </h2>
         <DocTable
@@ -71,18 +71,18 @@ export default function InstancesPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-white">
+        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold font-heading text-white">
           GPU Slicing <StatusBadge kind="live" />
         </h2>
         <ul className="list-disc space-y-2 pl-5 leading-relaxed">
-          <li>Hosts set <code className="rounded bg-black/40 px-1.5 py-0.5 font-mono text-sm">min_gpu</code> using powers of 2: 1, 2, 4, or 8.</li>
+          <li>Hosts set <code className="rounded bg-[#080D16] px-1.5 py-0.5 font-mono text-sm">min_gpu</code> using powers of 2: 1, 2, 4, or 8.</li>
           <li>Multiple renters can share one physical machine.</li>
           <li>Each renter receives exclusive GPU indices (for example devices 0 and 1).</li>
         </ul>
       </section>
 
       <section className="space-y-4">
-        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-white">
+        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold font-heading text-white">
           Deploying an Instance <StatusBadge kind="live" />
         </h2>
         <ul className="list-disc space-y-3 pl-5 leading-relaxed">
@@ -97,19 +97,19 @@ export default function InstancesPage() {
         <CodeBlock>
           {`velocity create-instance --offer ID --template pytorch --gpu-count 2`}
         </CodeBlock>
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-[#94A3B8]">
           <span className="text-white">API:</span> <code className="font-mono text-primary/90">POST /api/console/rent</code>
         </p>
       </section>
 
       <section className="space-y-4">
-        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-white">
+        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold font-heading text-white">
           Connecting to Instances <StatusBadge kind="partial" />
         </h2>
         <ul className="list-disc space-y-2 pl-5 leading-relaxed">
           <li>
             SSH:{' '}
-            <code className="rounded bg-black/40 px-1.5 py-0.5 font-mono text-sm text-primary/90">
+            <code className="rounded bg-[#080D16] px-1.5 py-0.5 font-mono text-sm text-primary/90">
               ssh root@&lt;public_ip&gt; -p &lt;port&gt;
             </code>{' '}
             when the host has a public IP.
@@ -119,7 +119,7 @@ export default function InstancesPage() {
             set to <code className="font-mono text-sm">&quot;jupyter&quot;</code>.
           </li>
         </ul>
-        <WarningBox title="What’s missing today">
+        <WarningBox title="What's missing today">
           <ul className="list-disc space-y-1 pl-5">
             <li>Web-based terminal (similar to Vast.ai)</li>
             <li>Reliable tunneling for hosts behind NAT</li>
@@ -129,14 +129,14 @@ export default function InstancesPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-white">
+        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold font-heading text-white">
           Storage <StatusBadge kind="partial" />
         </h2>
         <p className="leading-relaxed">
           Disk is allocated per instance, typically configurable from 10GB up to 100TB depending on
           offer and policy.
         </p>
-        <WarningBox title="What’s missing today">
+        <WarningBox title="What's missing today">
           <ul className="list-disc space-y-1 pl-5">
             <li>Persistent volumes that survive across instance replacements</li>
             <li>First-class cloud storage mounting</li>
@@ -146,7 +146,7 @@ export default function InstancesPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-white">
+        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold font-heading text-white">
           Templates <StatusBadge kind="live" />
         </h2>
         <p className="leading-relaxed">
@@ -156,7 +156,7 @@ export default function InstancesPage() {
           {templates.map((t) => (
             <li
               key={t}
-              className="rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2 text-sm text-gray-200"
+              className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 py-2 text-sm text-[#E2E8F0]"
             >
               {t}
             </li>
@@ -165,12 +165,12 @@ export default function InstancesPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-white">
+        <h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold font-heading text-white">
           What&apos;s NOT Built Yet <StatusBadge kind="planned" />
         </h2>
         <InfoBox>
           <p className="font-medium text-primary">Roadmap honesty</p>
-          <ul className="list-disc space-y-2 pl-5 text-gray-300">
+          <ul className="list-disc space-y-2 pl-5 text-[#E2E8F0]">
             {notBuilt.map((item) => (
               <li key={item}>{item}</li>
             ))}

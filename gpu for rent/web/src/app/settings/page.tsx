@@ -22,7 +22,7 @@ export default async function SettingsPage() {
     
     if (p) {
       profile = p;
-      walletBalance = p.wallet_balance_inr
+      walletBalance = p.wallet_balance_usd
     }
 
     const { data: keys } = await supabase
@@ -39,7 +39,7 @@ export default async function SettingsPage() {
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
 
   return (
-    <div className="min-h-screen flex bg-[#060606] text-white" style={{ fontFamily: 'var(--font-sans, Outfit, sans-serif)' }}>
+    <div className="min-h-screen flex bg-[#0B0F19] text-[#E2E8F0]">
       <ConsoleSidebar 
         role={profile?.role || 'renter'} 
         walletBalance={walletBalance} 
@@ -49,8 +49,8 @@ export default async function SettingsPage() {
       />
 
       <main className="flex-1 flex flex-col h-screen overflow-y-auto">
-        <header className="h-14 flex items-center justify-between px-8 border-b border-white/[0.06] bg-[#060606]/80 backdrop-blur-xl sticky top-0 z-10">
-          <h1 className="text-sm font-medium text-white">Settings</h1>
+        <header className="h-14 flex items-center justify-between px-8 border-b border-white/[0.06] bg-[#0B0F19]/80 backdrop-blur-xl sticky top-0 z-10">
+          <h1 className="text-sm font-heading font-medium text-[#E2E8F0]">Settings</h1>
           <div className="flex items-center gap-4">
             <ProfileDropdown userName={userName} email={user?.email || ''} />
           </div>
@@ -64,7 +64,7 @@ export default async function SettingsPage() {
           />
 
           <div className="mt-8 pt-8 border-t border-white/[0.06]">
-            <div className="text-[10px] text-gray-600 uppercase tracking-[0.15em] mb-6">Security & Keys</div>
+            <div className="text-[10px] text-[#475569] uppercase tracking-[0.15em] mb-6">Security & Keys</div>
             <div className="grid md:grid-cols-2 gap-4 mb-8">
               <ApiKeyManager />
             </div>

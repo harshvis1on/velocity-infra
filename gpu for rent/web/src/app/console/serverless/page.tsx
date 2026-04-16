@@ -67,15 +67,15 @@ export default function ServerlessPage() {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold mb-2">Serverless Endpoints</h1>
-          <p className="text-gray-400">Deploy auto-scaling APIs for your AI models.</p>
+          <p className="text-[#94A3B8]">Deploy auto-scaling APIs for your AI models.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="col-span-1 md:col-span-2 bg-[#1A1A1A] border border-white/10 rounded-xl overflow-hidden">
-          <div className="p-6 border-b border-white/10">
+        <div className="col-span-1 md:col-span-2 bg-white/[0.03] border border-white/[0.06] rounded-xl overflow-hidden">
+          <div className="p-6 border-b border-white/[0.06]">
             <h3 className="text-xl font-semibold text-white">Your Endpoints</h3>
-            <p className="text-sm text-gray-400 mt-1">Manage your active serverless deployments</p>
+            <p className="text-sm text-[#94A3B8] mt-1">Manage your active serverless deployments</p>
           </div>
           <div className="p-6">
             {loading ? (
@@ -87,7 +87,7 @@ export default function ServerlessPage() {
                 </div>
               </div>
             ) : endpoints.length === 0 ? (
-              <div className="text-center py-8 text-gray-400">
+              <div className="text-center py-8 text-[#94A3B8]">
                 <Server className="mx-auto h-12 w-12 mb-4 opacity-50" />
                 <p className="font-medium text-white">No endpoints yet</p>
                 <p className="text-sm mt-2">Create your first endpoint to get started.</p>
@@ -96,19 +96,19 @@ export default function ServerlessPage() {
               <div className="space-y-4">
                 {endpoints.map((endpoint) => (
                   <Link href={`/console/serverless/${endpoint.id}`} key={endpoint.id}>
-                    <div className="flex items-center justify-between p-4 rounded-lg border border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-pointer group">
+                    <div className="flex items-center justify-between p-4 rounded-lg border border-white/[0.06] hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-pointer group">
                       <div className="flex items-center space-x-4">
-                        <div className={`p-2 rounded-full ${endpoint.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-white/10 text-gray-400'}`}>
+                        <div className={`p-2 rounded-full ${endpoint.status === 'active' ? 'bg-primary/[0.15] text-primary' : 'bg-white/10 text-[#94A3B8]'}`}>
                           <Activity className="h-5 w-5" />
                         </div>
                         <div>
                           <h3 className="font-medium text-white">{endpoint.name}</h3>
-                          <p className="text-sm text-gray-400">
+                          <p className="text-sm text-[#94A3B8]">
                             {endpoint.status.charAt(0).toUpperCase() + endpoint.status.slice(1)} · Max {endpoint.max_workers} workers
                           </p>
                         </div>
                       </div>
-                      <ArrowRight className="h-5 w-5 text-gray-500 group-hover:text-primary transition-colors" />
+                      <ArrowRight className="h-5 w-5 text-[#64748B] group-hover:text-primary transition-colors" />
                     </div>
                   </Link>
                 ))}
@@ -117,10 +117,10 @@ export default function ServerlessPage() {
           </div>
         </div>
 
-        <div className="bg-[#1A1A1A] border border-white/10 rounded-xl overflow-hidden">
-          <div className="p-6 border-b border-white/10">
+        <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl overflow-hidden">
+          <div className="p-6 border-b border-white/[0.06]">
             <h3 className="text-xl font-semibold text-white">Create Endpoint</h3>
-            <p className="text-sm text-gray-400 mt-1">Set up a new auto-scaling API</p>
+            <p className="text-sm text-[#94A3B8] mt-1">Set up a new auto-scaling API</p>
           </div>
           <div className="p-6">
             {errorMsg && (
@@ -130,19 +130,19 @@ export default function ServerlessPage() {
             )}
             <form onSubmit={handleCreateEndpoint} className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Endpoint Name</label>
+                <label className="text-sm font-medium text-[#E2E8F0]">Endpoint Name</label>
                 <input 
                   type="text"
                   placeholder="e.g., prod-llama-3-8b" 
                   value={newEndpointName}
                   onChange={(e) => setNewEndpointName(e.target.value)}
-                  className="flex h-10 w-full rounded-lg border px-3 py-2 text-sm placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary bg-black/50 border-white/10 text-white"
+                  className="flex h-10 w-full rounded-xl border px-3 py-2 text-sm placeholder:text-[#475569] focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary bg-white/[0.03] border-white/[0.08] text-white"
                   required
                 />
               </div>
               <button 
                 type="submit" 
-                className="inline-flex items-center justify-center rounded-lg text-sm font-bold transition-colors h-10 px-4 py-2 w-full bg-primary hover:bg-primary-dark text-black disabled:opacity-50"
+                className="inline-flex items-center justify-center rounded-lg text-sm font-semibold transition-colors h-10 px-4 py-2 w-full bg-gradient-to-r from-primary-dark to-primary text-white disabled:opacity-50"
                 disabled={isCreating || !newEndpointName.trim()}
               >
                 {isCreating ? (

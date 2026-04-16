@@ -1,28 +1,27 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
-  createOffer,
-  unlistOffer,
-  unlistMachine,
-  scheduleMaintenance,
-  cancelMaintenance,
   pauseMachine,
   resumeMachine,
+  unlistOffer,
   removeMachine,
 } from './actions'
 import { createClient } from '@/utils/supabase/client'
+import { formatUSD } from '@/lib/currency'
 
 function getActiveOffer(machine: any) {
   return machine.offers?.find((o: any) => o.status === 'active') ?? null
 }
 
-function statusColor(status: string) {
-  if (status === 'rented') return 'bg-green-500'
-  if (status === 'available') return 'bg-blue-500'
-  if (status === 'paused') return 'bg-yellow-500'
-  if (status === 'offline') return 'bg-red-500'
-  return 'bg-gray-500'
+function statusInfo(machine: any) {
+  const offer = getActiveOffer(machine)
+  if (machine.status === 'rented') return { color: 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]', label: 'Rented' }
+  if (machine.status === 'paused') return { color: 'bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.5)]', label: 'Paused' }
+  if (machine.status === 'offline') return { color: 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]', label: 'Offline' }
+  if (machine.status === 'available' && offer) return { color: 'bg-primary shadow-[0_0_8px_rgba(129,140,248,0.5)]', label: 'Available' }
+  return { color: 'bg-[#64748B]', label: 'Unlisted' }
 }
 
 function tierBadge(tier: string) {
@@ -41,374 +40,336 @@ function relativeTime(iso: string | null): string {
 }
 
 export default function MachineList({ machines }: { machines: any[] }) {
-  const [expanded, setExpanded] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [selectedMachines, setSelectedMachines] = useState<Set<string>>(new Set())
-  const [bulkPrice, setBulkPrice] = useState('')
-  const [selfTestRequested, setSelfTestRequested] = useState<Record<string, boolean>>({})
+  const router = useRouter()
+  const [loadingAction, setLoadingAction] = useState<Record<string, string>>({})
+  const [editingPrice, setEditingPrice] = useState<string | null>(null)
+  const [priceInput, setPriceInput] = useState('')
+  const [copiedId, setCopiedId] = useState<string | null>(null)
 
-  const toggleExpand = (id: string) => setExpanded(prev => prev === id ? null : id)
-  const toggleSelect = (id: string) => {
-    setSelectedMachines(prev => {
-      const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
-      return next
-    })
-  }
-  const selectAll = () => {
-    if (selectedMachines.size === machines.length) {
-      setSelectedMachines(new Set())
-    } else {
-      setSelectedMachines(new Set(machines.map(m => m.id)))
+  const withAction = async (machineId: string, action: string, fn: () => Promise<void>) => {
+    setLoadingAction(prev => ({ ...prev, [machineId]: action }))
+    try {
+      await fn()
+      router.refresh()
+    } catch (err: any) {
+      alert(err.message)
+    } finally {
+      setLoadingAction(prev => {
+        const next = { ...prev }
+        delete next[machineId]
+        return next
+      })
     }
   }
 
-  const handleBulkPrice = async () => {
-    if (!bulkPrice || selectedMachines.size === 0) return
-    setLoading(true)
-    try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
+  const handleCopyId = (id: string) => {
+    navigator.clipboard.writeText(id)
+    setCopiedId(id)
+    setTimeout(() => setCopiedId(null), 1500)
+  }
 
-      for (const mid of Array.from(selectedMachines)) {
-        const machine = machines.find(m => m.id === mid)
-        const hasOffer = getActiveOffer(machine)
-        if (hasOffer) continue
+  const handleSavePrice = async (machine: any) => {
+    const offer = getActiveOffer(machine)
+    const price = parseFloat(priceInput)
+    if (!price || price <= 0) return alert('Enter a valid price')
 
+    if (offer) {
+      await withAction(machine.id, 'price', async () => {
+        const supabase = createClient()
+        await supabase.from('offers').update({ price_per_gpu_hr_usd: price }).eq('id', offer.id)
+        await supabase.from('machines').update({ price_per_hour_usd: price }).eq('id', machine.id)
+        setEditingPrice(null)
+        setPriceInput('')
+      })
+    } else {
+      await withAction(machine.id, 'list', async () => {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('Not authenticated')
         const endDate = new Date()
         endDate.setDate(endDate.getDate() + 30)
-
         await supabase.from('offers').insert({
-          machine_id: mid,
+          machine_id: machine.id,
           host_id: user.id,
-          price_per_gpu_hr_inr: parseFloat(bulkPrice),
-          storage_price_per_gb_month_inr: 4.5,
+          price_per_gpu_hr_usd: price,
+          storage_price_per_gb_month_usd: 4.5,
           min_gpu: 1,
           offer_end_date: endDate.toISOString(),
           reserved_discount_factor: 0.4,
           status: 'active',
         })
-        await supabase.from('machines').update({ listed: true, price_per_hour_inr: parseFloat(bulkPrice) }).eq('id', mid)
-      }
-      window.location.reload()
-    } catch (err: any) {
-      alert(err.message)
-    } finally {
-      setLoading(false)
+        await supabase.from('machines').update({ listed: true, price_per_hour_usd: price }).eq('id', machine.id)
+        setEditingPrice(null)
+        setPriceInput('')
+      })
     }
-  }
-
-  const handleUnlistOffer = async (offerId: string) => {
-    if (!confirm('Unlist this offer? New bookings will stop.')) return
-    setLoading(true)
-    try { await unlistOffer(offerId) } catch (err: any) { alert(err.message) } finally { setLoading(false) }
-  }
-
-  const handleUnlistMachine = async (id: string) => {
-    if (!confirm('Take this machine offline?')) return
-    setLoading(true)
-    try { await unlistMachine(id) } catch (err: any) { alert(err.message) } finally { setLoading(false) }
-  }
-
-  const handleRequestSelfTest = async (machineId: string) => {
-    setSelfTestRequested(prev => ({ ...prev, [machineId]: true }))
-    try {
-      const supabase = createClient()
-      await supabase.from('machines').update({ self_test_requested: true }).eq('id', machineId)
-    } catch (err: any) {
-      alert('Failed: ' + err.message)
-      setSelfTestRequested(prev => ({ ...prev, [machineId]: false }))
-    }
-  }
-
-  const handleScheduleMaintenance = async (e: React.FormEvent<HTMLFormElement>, machineId: string) => {
-    e.preventDefault()
-    const fd = new FormData(e.currentTarget)
-    const start = fd.get('maint_start') as string
-    const hrs = parseFloat(fd.get('maint_hrs') as string)
-    if (!start || !hrs) return alert('Enter start time and duration')
-    setLoading(true)
-    try { await scheduleMaintenance(machineId, start, hrs); e.currentTarget.reset() } catch (err: any) { alert(err.message) } finally { setLoading(false) }
   }
 
   if (machines.length === 0) {
     return (
-      <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center text-gray-500">
-        No machines registered yet. Click <span className="text-primary font-bold">+ List Machine</span> to get started.
+      <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-10 text-center">
+        <p className="text-[#94A3B8] text-sm">No machines registered yet.</p>
+        <p className="text-[#64748B] text-xs mt-1">
+          Click <span className="text-primary font-bold">+ List Machine</span> above to get started.
+        </p>
       </div>
     )
   }
 
-  const unlistedCount = machines.filter(m => !getActiveOffer(m)).length
-
   return (
     <div className="space-y-4">
-      {/* Bulk actions bar */}
-      {selectedMachines.size > 0 && (
-        <div className="flex items-center gap-3 p-3 bg-primary/5 border border-primary/20 rounded-xl">
-          <span className="text-sm text-primary font-medium">{selectedMachines.size} selected</span>
-          <div className="flex items-center gap-2 ml-auto">
-            <span className="text-xs text-gray-400">Set price for all:</span>
-            <div className="relative">
-              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">₹</span>
-              <input
-                type="number" step="0.50" min="1"
-                value={bulkPrice}
-                onChange={e => setBulkPrice(e.target.value)}
-                placeholder="35"
-                className="w-24 rounded pl-5 pr-2 py-1.5 bg-black/50 border border-white/10 text-xs text-white font-mono focus:border-primary focus:outline-none"
-              />
-            </div>
-            <span className="text-xs text-gray-500">/GPU/hr</span>
-            <button
-              onClick={handleBulkPrice}
-              disabled={loading || !bulkPrice}
-              className="bg-primary hover:bg-primary-dark text-black text-xs font-bold py-1.5 px-4 rounded-lg transition-colors disabled:opacity-50"
-            >
-              List All
-            </button>
-            <button onClick={() => setSelectedMachines(new Set())} className="text-xs text-gray-400 hover:text-white ml-1">Clear</button>
-          </div>
-        </div>
-      )}
+      <div className="flex items-center justify-between">
+        <h2 className="text-xs font-bold text-[#94A3B8] uppercase tracking-[0.15em]">
+          Your Machines <span className="text-[#64748B]">({machines.length})</span>
+        </h2>
+      </div>
 
-      {/* Table header */}
-      <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
-        <div className="grid grid-cols-[40px_1fr_100px_120px_100px_80px_60px] items-center px-4 py-2.5 border-b border-white/10 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-          <div>
-            <input
-              type="checkbox"
-              checked={selectedMachines.size === machines.length}
-              onChange={selectAll}
-              className="rounded border-white/20 bg-black/50 accent-primary w-3.5 h-3.5"
-            />
-          </div>
-          <div>Machine</div>
-          <div>Status</div>
-          <div>Price</div>
-          <div>Utilization</div>
-          <div>Earned</div>
-          <div></div>
-        </div>
-
-        {/* Machine rows */}
+      <div className="space-y-3">
         {machines.map(machine => {
           const offer = getActiveOffer(machine)
-          const isExpanded = expanded === machine.id
-          const gpuAlloc = machine.gpu_count > 0 ? Math.round((machine.gpu_allocated || 0) / machine.gpu_count * 100) : 0
-          const totalEarned = machine.instances?.reduce((acc: number, i: any) => acc + (i.total_cost_inr || 0), 0) || 0
+          const status = statusInfo(machine)
           const badge = tierBadge(machine.machine_tier)
+          const gpuAlloc = machine.gpu_count > 0
+            ? Math.round((machine.gpu_allocated || 0) / machine.gpu_count * 100)
+            : 0
+          const totalEarned = machine.instances?.reduce(
+            (acc: number, i: any) => acc + (i.total_cost_usd || 0), 0
+          ) || 0
           const contracts = (machine.rental_contracts ?? []).filter((c: any) => c.status === 'active')
-          const maintenanceRows = (machine.maintenance_windows ?? []).filter((w: any) => w.status === 'scheduled' || w.status === 'active')
+          const allocatedGpus = contracts.reduce((acc: number, c: any) => acc + (c.gpu_count || 0), 0)
+          const isRented = machine.status === 'rented' || contracts.length > 0
+          const isPaused = machine.status === 'paused'
+          const isOffline = machine.status === 'offline'
+          const isListed = !!offer
+          const isEditingThis = editingPrice === machine.id
+          const currentAction = loadingAction[machine.id]
+          const heartbeat = relativeTime(machine.last_heartbeat)
 
           return (
-            <div key={machine.id} className={`border-b border-white/5 last:border-b-0 ${isExpanded ? 'bg-white/[0.02]' : ''}`}>
-              {/* Compact row */}
-              <div
-                className="grid grid-cols-[40px_1fr_100px_120px_100px_80px_60px] items-center px-4 py-3 cursor-pointer hover:bg-white/[0.03] transition-colors"
-                onClick={() => toggleExpand(machine.id)}
-              >
-                <div onClick={e => e.stopPropagation()}>
-                  <input
-                    type="checkbox"
-                    checked={selectedMachines.has(machine.id)}
-                    onChange={() => toggleSelect(machine.id)}
-                    className="rounded border-white/20 bg-black/50 accent-primary w-3.5 h-3.5"
-                  />
-                </div>
-                <div className="flex items-center gap-3 min-w-0">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm text-white truncate">
-                        {machine.gpu_count}x {machine.gpu_model}
-                      </span>
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${badge.cls}`}>{badge.label}</span>
-                    </div>
-                    <div className="text-[11px] text-gray-500 truncate">
-                      {machine.vram_gb}GB VRAM · {machine.ram_gb}GB RAM · {machine.id.substring(0, 8)}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className={`w-1.5 h-1.5 rounded-full ${statusColor(machine.status)}`} />
-                  <span className="text-xs text-gray-300 capitalize">{machine.status}</span>
-                </div>
-                <div>
+            <div
+              key={machine.id}
+              className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5 transition-colors hover:border-white/[0.1]"
+            >
+              {/* Row 1: status + GPU specs + meta */}
+              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mb-1">
+                <span className="flex items-center gap-1.5">
+                  <span className={`w-2 h-2 rounded-full ${status.color}`} />
+                  <span className="text-xs font-medium text-[#94A3B8]">{status.label}</span>
+                </span>
+                <span className="text-sm font-semibold text-[#E2E8F0]">
+                  {machine.gpu_count}x {machine.gpu_model}
+                </span>
+                <span className="text-xs text-[#94A3B8]">{machine.vram_gb}GB VRAM</span>
+                <span className="text-xs text-[#64748B]">{machine.ram_gb}GB RAM</span>
+              </div>
+
+              {/* Row 2: tier, heartbeat, ID */}
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-3 text-[11px] text-[#64748B]">
+                <span className={`px-1.5 py-0.5 rounded border text-[10px] font-bold ${badge.cls}`}>
+                  {badge.label}
+                </span>
+                <span className="text-[#475569]">│</span>
+                <span>
+                  Last heartbeat:{' '}
+                  <span className={isOffline ? 'text-red-400' : 'text-[#94A3B8]'}>{heartbeat}</span>
+                </span>
+                <span className="text-[#475569]">│</span>
+                <button
+                  onClick={() => handleCopyId(machine.id)}
+                  className="font-mono text-[#94A3B8] hover:text-[#E2E8F0] transition-colors cursor-pointer"
+                  title="Click to copy full ID"
+                >
+                  {copiedId === machine.id ? 'Copied!' : `ID: ${machine.id.substring(0, 8)}…`}
+                </button>
+              </div>
+
+              {/* Row 3: price, utilization, earnings */}
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-3">
+                <div className="flex items-center gap-1.5 text-sm">
+                  <span className="text-xs text-[#94A3B8]">Price:</span>
                   {offer ? (
-                    <span className="font-mono text-sm text-white">₹{Number(offer.price_per_gpu_hr_inr).toFixed(0)}<span className="text-gray-500 text-[10px]">/GPU/hr</span></span>
+                    <span className="font-mono text-[#E2E8F0]">
+                      {formatUSD(Number(offer.price_per_gpu_hr_usd), { suffix: '/GPU/hr' })}
+                      {offer.auto_price && (
+                        <span className="text-primary text-[10px] ml-1">(auto)</span>
+                      )}
+                    </span>
                   ) : (
-                    <span className="text-xs text-gray-500 italic">Not listed</span>
+                    <span className="text-xs text-[#64748B] italic">Not listed</span>
                   )}
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
-                      <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-green-500" style={{ width: `${gpuAlloc}%` }} />
-                    </div>
-                    <span className="text-[10px] font-mono text-gray-400 w-8 text-right">{gpuAlloc}%</span>
+                <span className="text-[#475569] hidden sm:inline">│</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-[#94A3B8]">Utilization:</span>
+                  <div className="w-20 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all duration-300"
+                      style={{ width: `${gpuAlloc}%` }}
+                    />
                   </div>
+                  <span className="font-mono text-xs text-[#94A3B8]">{gpuAlloc}%</span>
                 </div>
-                <div className="font-mono text-xs text-primary">₹{totalEarned.toFixed(0)}</div>
-                <div className="flex justify-end">
-                  <svg className={`w-4 h-4 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+                <span className="text-[#475569] hidden sm:inline">│</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-[#94A3B8]">Earned:</span>
+                  <span className="font-mono text-xs text-primary">
+                    {formatUSD(totalEarned)}
+                  </span>
                 </div>
               </div>
 
-              {/* Expanded details */}
-              {isExpanded && (
-                <div className="px-4 pb-4 pt-1 grid md:grid-cols-3 gap-4">
-                  {/* Offer & Pricing */}
-                  <div className="bg-black/30 border border-white/5 rounded-lg p-4">
-                    <h5 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3">Listing</h5>
-                    {offer ? (
-                      <div className="space-y-2 text-xs">
-                        <div className="flex justify-between"><span className="text-gray-400">On-Demand</span><span className="font-mono text-white">₹{Number(offer.price_per_gpu_hr_inr).toFixed(0)}/GPU/hr</span></div>
-                        <div className="flex justify-between"><span className="text-gray-400">Reserved</span><span className="font-mono text-green-400">₹{(Number(offer.price_per_gpu_hr_inr) * (1 - Number(offer.reserved_discount_factor || 0.4))).toFixed(0)}/GPU/hr</span></div>
-                        {offer.interruptible_min_price_inr != null && (
-                          <div className="flex justify-between"><span className="text-gray-400">Interruptible</span><span className="font-mono text-yellow-400">₹{Number(offer.interruptible_min_price_inr).toFixed(0)}/GPU/hr</span></div>
-                        )}
-                        <div className="flex justify-between"><span className="text-gray-400">Storage</span><span className="font-mono">₹{Number(offer.storage_price_per_gb_month_inr).toFixed(1)}/GB/mo</span></div>
-                        <div className="flex justify-between"><span className="text-gray-400">Min GPUs</span><span className="font-mono">{offer.min_gpu}</span></div>
-                        <div className="flex justify-between"><span className="text-gray-400">Expires</span><span className="text-gray-300">{offer.offer_end_date ? new Date(offer.offer_end_date).toLocaleDateString() : '—'}</span></div>
-                        <button onClick={() => handleUnlistOffer(offer.id)} disabled={loading} className="w-full mt-2 text-center text-[11px] font-bold py-1.5 rounded border border-red-500/20 text-red-400 hover:bg-red-500/10 disabled:opacity-50">Unlist</button>
-                      </div>
-                    ) : (
-                      <p className="text-xs text-gray-500">Not listed. Use "Create Offer" to publish.</p>
-                    )}
+              {/* Row 4: active rentals */}
+              <div className="text-xs text-[#94A3B8] mb-4">
+                Active rentals: {contracts.length}/{machine.gpu_count} GPUs allocated
+                {contracts.length > 0 && (
+                  <span className="text-[#64748B] ml-2">
+                    ({contracts
+                      .map((c: any) =>
+                        `${c.gpu_count} GPU ${(c.rental_type || 'on_demand').replace('_', ' ')}`
+                      )
+                      .join(', ')})
+                  </span>
+                )}
+              </div>
+
+              {/* Inline price editor */}
+              {isEditingThis && (
+                <div className="flex items-center gap-2 mb-4 p-3 bg-white/[0.03] rounded-lg border border-white/[0.06]">
+                  <span className="text-xs text-[#94A3B8]">
+                    {isListed ? 'New price:' : 'Set price to list:'}
+                  </span>
+                  <div className="relative">
+                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[#94A3B8] text-xs">$</span>
+                    <input
+                      type="number"
+                      step="0.50"
+                      min="1"
+                      value={priceInput}
+                      onChange={e => setPriceInput(e.target.value)}
+                      placeholder={offer ? String(Number(offer.price_per_gpu_hr_usd).toFixed(0)) : '35'}
+                      autoFocus
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') handleSavePrice(machine)
+                        if (e.key === 'Escape') { setEditingPrice(null); setPriceInput('') }
+                      }}
+                      className="w-28 rounded-lg pl-5 pr-2 py-1.5 bg-white/[0.03] border border-white/[0.08] text-xs text-[#E2E8F0] font-mono focus:border-primary focus:outline-none"
+                    />
                   </div>
-
-                  {/* Health & Metrics */}
-                  <div className="bg-black/30 border border-white/5 rounded-lg p-4">
-                    <h5 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3">Health</h5>
-                    <div className="space-y-1.5 text-xs">
-                      <div className="flex justify-between"><span className="text-gray-400">Reliability</span><span className={`font-mono ${(machine.reliability_score || 0) >= 85 ? 'text-green-400' : 'text-red-400'}`}>{Number(machine.reliability_score || 0).toFixed(1)}%</span></div>
-                      <div className="flex justify-between"><span className="text-gray-400">Heartbeat</span><span className="font-mono text-gray-300">{relativeTime(machine.last_heartbeat)}</span></div>
-                      <div className="flex justify-between"><span className="text-gray-400">GPU Temp</span><span className={`font-mono ${(machine.gpu_temp || 0) >= 90 ? 'text-red-400' : 'text-green-400'}`}>{machine.gpu_temp || 0}°C</span></div>
-                      <div className="flex justify-between"><span className="text-gray-400">CUDA</span><span className="font-mono text-gray-300">{machine.cuda_version || '—'}</span></div>
-                      <div className="flex justify-between"><span className="text-gray-400">Self-Test</span><span className={machine.self_test_passed ? 'text-green-400' : 'text-yellow-400'}>{machine.self_test_passed ? 'Passed' : 'Pending'}</span></div>
-                      <div className="flex justify-between"><span className="text-gray-400">Public IP</span><span className="font-mono text-gray-300 text-[10px]">{machine.public_ip || '—'}</span></div>
-                      <button
-                        onClick={() => handleRequestSelfTest(machine.id)}
-                        disabled={selfTestRequested[machine.id]}
-                        className="w-full mt-2 text-[11px] font-bold py-1.5 rounded border border-blue-500/20 text-blue-400 bg-blue-500/5 hover:bg-blue-500/10 disabled:opacity-50"
-                      >
-                        {selfTestRequested[machine.id] ? 'Requested...' : 'Run Self-Test'}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Contracts & Actions */}
-                  <div className="bg-black/30 border border-white/5 rounded-lg p-4 space-y-4">
-                    <div>
-                      <h5 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Rentals ({contracts.length})</h5>
-                      {contracts.length === 0 ? (
-                        <p className="text-xs text-gray-500 italic">No active rentals</p>
-                      ) : (
-                        <div className="space-y-1.5">
-                          {contracts.map((c: any) => (
-                            <div key={c.id} className="flex items-center justify-between text-[11px] bg-black/30 rounded px-2 py-1.5 border border-white/5">
-                              <span className="font-mono text-gray-400">{c.gpu_count} GPU</span>
-                              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
-                                c.rental_type === 'reserved' ? 'bg-green-500/10 text-green-400' :
-                                c.rental_type === 'interruptible' ? 'bg-yellow-500/10 text-yellow-400' :
-                                'bg-blue-500/10 text-blue-400'
-                              }`}>{(c.rental_type || 'on_demand').replace('_', ' ')}</span>
-                              <span className="font-mono text-primary">₹{Number(c.price_per_gpu_hr_inr).toFixed(0)}/hr</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Maintenance */}
-                    <div>
-                      <h5 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Maintenance</h5>
-                      {maintenanceRows.length > 0 && (
-                        <div className="space-y-1 mb-2">
-                          {maintenanceRows.map((w: any) => (
-                            <div key={w.id} className="text-[11px] text-yellow-400 bg-yellow-500/5 rounded px-2 py-1 border border-yellow-500/10">
-                              {w.start_date ? new Date(w.start_date).toLocaleDateString() : '—'} · {w.duration_hrs}h
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      <form onSubmit={e => handleScheduleMaintenance(e, machine.id)} className="flex gap-1.5">
-                        <input name="maint_start" type="datetime-local" className="flex-1 bg-black/50 border border-white/10 rounded px-2 py-1 text-[10px] text-white focus:border-primary focus:outline-none" />
-                        <input name="maint_hrs" type="number" step="0.5" min="0.5" defaultValue={2} className="w-12 bg-black/50 border border-white/10 rounded px-1.5 py-1 text-[10px] text-white focus:border-primary focus:outline-none" />
-                        <button type="submit" disabled={loading} className="text-[10px] font-bold px-2 py-1 rounded bg-white/5 border border-white/10 hover:bg-white/10 disabled:opacity-50">Set</button>
-                      </form>
-                    </div>
-
-                    <div>
-                      <h5 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Machine Controls</h5>
-                      <div className="space-y-1.5">
-                        {(machine.status === 'available' || machine.status === 'rented') && (
-                          <button
-                            onClick={async () => {
-                              if (!confirm('Pause this machine? No new rentals will be accepted. Existing rentals will continue until they finish.')) return
-                              setLoading(true)
-                              try { await pauseMachine(machine.id) } catch (err: any) { alert(err.message) } finally { setLoading(false) }
-                            }}
-                            disabled={loading}
-                            className="w-full text-left text-[11px] font-medium py-1.5 px-2 rounded border border-yellow-500/20 text-yellow-400 bg-yellow-500/5 hover:bg-yellow-500/10 disabled:opacity-50 transition-colors"
-                          >
-                            Pause — stop new rentals
-                          </button>
-                        )}
-                        {(machine.status === 'paused' || machine.status === 'offline') && (
-                          <button
-                            onClick={async () => {
-                              setLoading(true)
-                              try { await resumeMachine(machine.id) } catch (err: any) { alert(err.message) } finally { setLoading(false) }
-                            }}
-                            disabled={loading}
-                            className="w-full text-left text-[11px] font-medium py-1.5 px-2 rounded border border-green-500/20 text-green-400 bg-green-500/5 hover:bg-green-500/10 disabled:opacity-50 transition-colors"
-                          >
-                            Resume — accept new rentals
-                          </button>
-                        )}
-                        {machine.status !== 'offline' && (
-                          <button
-                            onClick={async () => {
-                              if (!confirm('Take machine offline? All running instances will be stopped and renters will be refunded.')) return
-                              setLoading(true)
-                              try { await unlistMachine(machine.id) } catch (err: any) { alert(err.message) } finally { setLoading(false) }
-                            }}
-                            disabled={loading}
-                            className="w-full text-left text-[11px] font-medium py-1.5 px-2 rounded border border-red-500/20 text-red-400 bg-red-500/5 hover:bg-red-500/10 disabled:opacity-50 transition-colors"
-                          >
-                            Go offline — stop everything + refund renters
-                          </button>
-                        )}
-                        {machine.status === 'offline' && (
-                          <button
-                            onClick={async () => {
-                              if (!confirm('Permanently remove this machine from your account? This cannot be undone.')) return
-                              setLoading(true)
-                              try { await removeMachine(machine.id) } catch (err: any) { alert(err.message) } finally { setLoading(false) }
-                            }}
-                            disabled={loading}
-                            className="w-full text-left text-[11px] font-medium py-1.5 px-2 rounded border border-red-500/30 text-red-500 bg-red-500/5 hover:bg-red-500/10 disabled:opacity-50 transition-colors"
-                          >
-                            Remove machine permanently
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                  <span className="text-[10px] text-[#64748B]">/GPU/hr</span>
+                  <button
+                    onClick={() => handleSavePrice(machine)}
+                    disabled={!!currentAction}
+                    className="bg-gradient-to-r from-primary-dark to-primary text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {currentAction === 'price' || currentAction === 'list' ? 'Saving…' : 'Save'}
+                  </button>
+                  <button
+                    onClick={() => { setEditingPrice(null); setPriceInput('') }}
+                    className="text-xs text-[#94A3B8] hover:text-[#E2E8F0] transition-colors"
+                  >
+                    Cancel
+                  </button>
                 </div>
               )}
+
+              {/* Offline warning */}
+              {isOffline && (
+                <div className="flex items-center gap-1.5 mb-4 text-xs text-red-400">
+                  <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                  Last seen: {heartbeat}
+                </div>
+              )}
+
+              {/* Action buttons */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {isListed && !isEditingThis && (
+                  <button
+                    onClick={() => {
+                      setEditingPrice(machine.id)
+                      setPriceInput(String(Number(offer.price_per_gpu_hr_usd).toFixed(0)))
+                    }}
+                    disabled={!!currentAction}
+                    className="bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-xs text-[#94A3B8] px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    Edit Price
+                  </button>
+                )}
+
+                {!isListed && !isEditingThis && !isOffline && (
+                  <button
+                    onClick={() => {
+                      setEditingPrice(machine.id)
+                      setPriceInput(
+                        machine.price_per_hour_usd
+                          ? String(Number(machine.price_per_hour_usd).toFixed(0))
+                          : ''
+                      )
+                    }}
+                    disabled={!!currentAction}
+                    className="bg-gradient-to-r from-primary-dark to-primary text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    List
+                  </button>
+                )}
+
+                {isListed && !isRented && (
+                  <button
+                    onClick={() => {
+                      if (!confirm('Unlist this machine? New bookings will stop.')) return
+                      withAction(machine.id, 'unlist', () => unlistOffer(offer.id))
+                    }}
+                    disabled={!!currentAction}
+                    className="bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-xs text-[#94A3B8] px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {currentAction === 'unlist' ? 'Unlisting…' : 'Unlist'}
+                  </button>
+                )}
+
+                {!isPaused && !isOffline && (
+                  <button
+                    onClick={() => {
+                      if (!confirm('Pause this machine? No new rentals will be accepted.')) return
+                      withAction(machine.id, 'pause', () => pauseMachine(machine.id))
+                    }}
+                    disabled={!!currentAction}
+                    className="bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-xs text-yellow-400 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {currentAction === 'pause' ? 'Pausing…' : 'Pause'}
+                  </button>
+                )}
+
+                {(isPaused || isOffline) && (
+                  <button
+                    onClick={() => withAction(machine.id, 'resume', () => resumeMachine(machine.id))}
+                    disabled={!!currentAction}
+                    className="bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-xs text-primary px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {currentAction === 'resume' ? 'Resuming…' : 'Resume'}
+                  </button>
+                )}
+
+                {!isRented ? (
+                  <button
+                    onClick={() => {
+                      if (!confirm('Permanently remove this machine? This cannot be undone.')) return
+                      withAction(machine.id, 'remove', () => removeMachine(machine.id))
+                    }}
+                    disabled={!!currentAction}
+                    className="text-red-400 hover:bg-red-500/10 text-xs px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {currentAction === 'remove' ? 'Removing…' : 'Remove'}
+                  </button>
+                ) : (
+                  <span className="text-xs text-blue-400 px-3 py-1.5">
+                    ● {allocatedGpus}/{machine.gpu_count} GPUs in use
+                  </span>
+                )}
+              </div>
             </div>
           )
         })}
-      </div>
-
-      {/* Summary */}
-      <div className="text-xs text-gray-500 text-center">
-        {machines.length} machine{machines.length !== 1 ? 's' : ''} · {unlistedCount > 0 ? `${unlistedCount} not listed` : 'All listed'}
       </div>
     </div>
   )

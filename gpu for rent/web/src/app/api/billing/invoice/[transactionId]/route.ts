@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { USD_TO_INR } from '@/lib/currency'
 
 const supabaseAdmin = createAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -36,6 +37,192 @@ function generateInvoiceNumber(createdAt: string, sequentialId: number): string 
   return `VEL-${yyyy}${mm}-${seq}`
 }
 
+const SHARED_STYLES = `
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #1a1a1a; padding: 40px; max-width: 800px; margin: auto; }
+  .header { display: flex; justify-content: space-between; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 2px solid #000; }
+  .logo { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+  .logo span { color: #818CF8; }
+  .invoice-title { text-align: right; }
+  .invoice-title h1 { font-size: 28px; color: #333; }
+  .invoice-title .number { font-size: 14px; color: #666; margin-top: 4px; }
+  .parties { display: flex; justify-content: space-between; margin-bottom: 40px; }
+  .party { width: 45%; }
+  .party h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #999; margin-bottom: 8px; }
+  .party p { font-size: 13px; line-height: 1.6; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+  th { background: #f5f5f5; text-align: left; padding: 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #666; border-bottom: 1px solid #ddd; }
+  td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; }
+  .amount { text-align: right; font-family: monospace; }
+  .total-row td { font-weight: 700; border-top: 2px solid #000; font-size: 15px; }
+  .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; font-size: 11px; color: #999; }
+  .note { background: #f8f8f8; padding: 16px; border-radius: 4px; margin-bottom: 20px; font-size: 12px; }
+  .print-btn { display: block; margin: 30px auto 0; padding: 12px 32px; background: #000; color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; letter-spacing: 0.3px; }
+  .print-btn:hover { background: #333; }
+  @media print {
+    body { padding: 20px; }
+    .print-btn { display: none !important; }
+    @page { margin: 15mm; size: A4; }
+  }
+`
+
+function renderHeader(invoiceNumber: string, invoiceDate: string, isGst: boolean) {
+  return `
+  <div class="header">
+    <div class="logo">Velocity<span>Infra</span></div>
+    <div class="invoice-title">
+      <h1>${isGst ? 'TAX INVOICE' : 'INVOICE'}</h1>
+      <div class="number">${invoiceNumber}</div>
+      <div class="number">${invoiceDate}</div>
+    </div>
+  </div>`
+}
+
+function renderParties(profile: any, userEmail: string, isGst: boolean) {
+  const sellerGstLine = isGst ? `<p>GSTIN: ${VELOCITY_GSTIN}</p><p>SAC: ${VELOCITY_SAC}</p>` : ''
+  const buyerGstLine = isGst && profile?.gstin ? `<p>GSTIN: ${escapeHtml(profile.gstin)}</p>` : ''
+
+  return `
+  <div class="parties">
+    <div class="party">
+      <h3>From</h3>
+      <p><strong>${VELOCITY_LEGAL}</strong></p>
+      <p>${VELOCITY_ADDRESS}</p>
+      ${sellerGstLine}
+    </div>
+    <div class="party">
+      <h3>Bill To</h3>
+      <p><strong>${escapeHtml(profile?.company_name || profile?.full_name || userEmail)}</strong></p>
+      <p>${escapeHtml(profile?.billing_address || '')}</p>
+      ${buyerGstLine}
+      <p>${escapeHtml(profile?.email || userEmail)}</p>
+    </div>
+  </div>`
+}
+
+function renderFooter(invoiceNumber: string, invoiceDate: string, tx: any) {
+  return `
+  <div class="footer">
+    <p>Invoice No: ${invoiceNumber} | Date: ${invoiceDate}</p>
+    <p>Payment Reference: ${tx.razorpay_payment_id || tx.reference_id || tx.id}</p>
+    <p>Payment Method: ${tx.type === 'deposit' ? 'Razorpay (UPI / Cards / Net Banking)' : 'Wallet Deduction'}</p>
+    <p style="margin-top: 8px;">This is a computer-generated invoice and does not require a physical signature.</p>
+    <p>${VELOCITY_LEGAL} | ${VELOCITY_ADDRESS} | support@velocityinfra.in</p>
+  </div>
+  <button class="print-btn" onclick="window.print()">Download PDF</button>`
+}
+
+function renderGstInvoice(
+  invoiceNumber: string, invoiceDate: string,
+  tx: any, profile: any, userEmail: string, amountUsd: number
+) {
+  const amountInr = amountUsd * USD_TO_INR
+  const baseAmount = amountInr / 1.18
+  const gstAmount = amountInr - baseAmount
+  const cgst = gstAmount / 2
+  const sgst = gstAmount / 2
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Invoice ${invoiceNumber}</title>
+  <style>${SHARED_STYLES}</style>
+</head>
+<body>
+  ${renderHeader(invoiceNumber, invoiceDate, true)}
+  ${renderParties(profile, userEmail, true)}
+
+  <table>
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th>SAC Code</th>
+        <th class="amount">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>${tx.type === 'deposit' ? 'Wallet Top-Up — GPU Cloud Computing Credits' : 'GPU Compute Usage'}<br><span style="font-size:11px;color:#666">Wallet credit: $${amountUsd.toFixed(2)} USD</span></td>
+        <td>${VELOCITY_SAC}</td>
+        <td class="amount">₹${baseAmount.toFixed(2)}</td>
+      </tr>
+      <tr>
+        <td>CGST @ 9%</td>
+        <td></td>
+        <td class="amount">₹${cgst.toFixed(2)}</td>
+      </tr>
+      <tr>
+        <td>SGST @ 9%</td>
+        <td></td>
+        <td class="amount">₹${sgst.toFixed(2)}</td>
+      </tr>
+      <tr class="total-row">
+        <td colspan="2">Total (INR)</td>
+        <td class="amount">₹${amountInr.toFixed(2)}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <strong>GST Summary:</strong> Taxable Value ₹${baseAmount.toFixed(2)} | CGST @9%: ₹${cgst.toFixed(2)} | SGST @9%: ₹${sgst.toFixed(2)} | Total Tax: ₹${gstAmount.toFixed(2)}<br>
+    <strong>Exchange Rate:</strong> 1 USD = ₹${USD_TO_INR} | Wallet Credit: $${amountUsd.toFixed(2)} USD
+    ${profile?.gstin ? '<br><strong>ITC Eligible:</strong> Yes — GSTIN registered buyer.' : ''}
+  </div>
+
+  ${renderFooter(invoiceNumber, invoiceDate, tx)}
+</body>
+</html>`
+}
+
+function renderInternationalInvoice(
+  invoiceNumber: string, invoiceDate: string,
+  tx: any, profile: any, userEmail: string, amountUsd: number
+) {
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Invoice ${invoiceNumber}</title>
+  <style>${SHARED_STYLES}</style>
+</head>
+<body>
+  ${renderHeader(invoiceNumber, invoiceDate, false)}
+  ${renderParties(profile, userEmail, false)}
+
+  <table>
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th class="amount">Amount (USD)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>${tx.type === 'deposit' ? 'Wallet Top-Up — GPU Cloud Computing Credits' : 'GPU Compute Usage'}</td>
+        <td class="amount">$${amountUsd.toFixed(2)}</td>
+      </tr>
+      <tr class="total-row">
+        <td>Total (USD)</td>
+        <td class="amount">$${amountUsd.toFixed(2)}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <strong>Note:</strong> This invoice is issued by ${VELOCITY_LEGAL}, registered in India.
+    No additional taxes apply for international customers. Your wallet has been credited $${amountUsd.toFixed(2)} USD.
+  </div>
+
+  ${renderFooter(invoiceNumber, invoiceDate, tx)}
+</body>
+</html>`
+}
+
 export async function GET(
   request: Request,
   { params }: { params: { transactionId: string } }
@@ -57,7 +244,7 @@ export async function GET(
 
   const { data: profile } = await supabase
     .from('users')
-    .select('full_name, email, phone, company_name, gstin, billing_address')
+    .select('full_name, email, phone, company_name, gstin, billing_address, billing_country')
     .eq('id', user.id)
     .single()
 
@@ -69,12 +256,7 @@ export async function GET(
   const sequentialId = count ?? 1
   const invoiceNumber = generateInvoiceNumber(tx.created_at, sequentialId)
   const invoiceUrl = `/api/billing/invoice/${params.transactionId}`
-
-  const amountInr = Number(tx.amount_inr)
-  const baseAmount = amountInr / 1.18
-  const gstAmount = amountInr - baseAmount
-  const cgst = gstAmount / 2
-  const sgst = gstAmount / 2
+  const amountUsd = Number(tx.amount_usd)
   const invoiceDate = formatDate(tx.created_at)
 
   await supabaseAdmin
@@ -82,116 +264,12 @@ export async function GET(
     .update({ invoice_url: invoiceUrl })
     .eq('id', params.transactionId)
 
-  const html = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="robots" content="noindex, nofollow">
-  <title>Invoice ${invoiceNumber}</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #1a1a1a; padding: 40px; max-width: 800px; margin: auto; }
-    .header { display: flex; justify-content: space-between; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 2px solid #000; }
-    .logo { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
-    .logo span { color: #00ff88; }
-    .invoice-title { text-align: right; }
-    .invoice-title h1 { font-size: 28px; color: #333; }
-    .invoice-title .number { font-size: 14px; color: #666; margin-top: 4px; }
-    .parties { display: flex; justify-content: space-between; margin-bottom: 40px; }
-    .party { width: 45%; }
-    .party h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #999; margin-bottom: 8px; }
-    .party p { font-size: 13px; line-height: 1.6; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-    th { background: #f5f5f5; text-align: left; padding: 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #666; border-bottom: 1px solid #ddd; }
-    td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; }
-    .amount { text-align: right; font-family: monospace; }
-    .total-row td { font-weight: 700; border-top: 2px solid #000; font-size: 15px; }
-    .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; font-size: 11px; color: #999; }
-    .gst-note { background: #f8f8f8; padding: 16px; border-radius: 4px; margin-bottom: 20px; font-size: 12px; }
-    .print-btn { display: block; margin: 30px auto 0; padding: 12px 32px; background: #000; color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; letter-spacing: 0.3px; }
-    .print-btn:hover { background: #333; }
-    @media print {
-      body { padding: 20px; }
-      .print-btn { display: none !important; }
-      @page { margin: 15mm; size: A4; }
-    }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <div class="logo">Velocity<span>Infra</span></div>
-    <div class="invoice-title">
-      <h1>TAX INVOICE</h1>
-      <div class="number">${invoiceNumber}</div>
-      <div class="number">${invoiceDate}</div>
-    </div>
-  </div>
+  const billingCountry = profile?.billing_country || 'IN'
+  const isIndian = billingCountry === 'IN'
 
-  <div class="parties">
-    <div class="party">
-      <h3>From</h3>
-      <p><strong>${VELOCITY_LEGAL}</strong></p>
-      <p>${VELOCITY_ADDRESS}</p>
-      <p>GSTIN: ${VELOCITY_GSTIN}</p>
-      <p>SAC: ${VELOCITY_SAC}</p>
-    </div>
-    <div class="party">
-      <h3>Bill To</h3>
-      <p><strong>${escapeHtml(profile?.company_name || profile?.full_name || user.email || '')}</strong></p>
-      <p>${escapeHtml(profile?.billing_address || '')}</p>
-      ${profile?.gstin ? `<p>GSTIN: ${escapeHtml(profile.gstin)}</p>` : ''}
-      <p>${escapeHtml(profile?.email || user.email || '')}</p>
-    </div>
-  </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Description</th>
-        <th>SAC Code</th>
-        <th class="amount">Amount (INR)</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>${tx.type === 'deposit' ? 'Wallet Top-Up — GPU Cloud Computing Credits' : 'GPU Compute Usage'}</td>
-        <td>${VELOCITY_SAC}</td>
-        <td class="amount">₹${baseAmount.toFixed(2)}</td>
-      </tr>
-      <tr>
-        <td>CGST @ 9%</td>
-        <td></td>
-        <td class="amount">₹${cgst.toFixed(2)}</td>
-      </tr>
-      <tr>
-        <td>SGST @ 9%</td>
-        <td></td>
-        <td class="amount">₹${sgst.toFixed(2)}</td>
-      </tr>
-      <tr class="total-row">
-        <td colspan="2">Total</td>
-        <td class="amount">₹${amountInr.toFixed(2)}</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <div class="gst-note">
-    <strong>GST Summary:</strong> Taxable Value ₹${baseAmount.toFixed(2)} | CGST @9%: ₹${cgst.toFixed(2)} | SGST @9%: ₹${sgst.toFixed(2)} | Total Tax: ₹${gstAmount.toFixed(2)}
-    ${profile?.gstin ? '<br><strong>ITC Eligible:</strong> Yes — GSTIN registered buyer.' : ''}
-  </div>
-
-  <div class="footer">
-    <p>Invoice No: ${invoiceNumber} | Date: ${invoiceDate}</p>
-    <p>Payment Reference: ${tx.razorpay_payment_id || tx.reference_id || tx.id}</p>
-    <p>Payment Method: ${tx.type === 'deposit' ? 'UPI / Razorpay' : 'Wallet Deduction'}</p>
-    <p style="margin-top: 8px;">This is a computer-generated invoice and does not require a physical signature.</p>
-    <p>${VELOCITY_LEGAL} | ${VELOCITY_ADDRESS} | support@velocityinfra.in</p>
-  </div>
-
-  <button class="print-btn" onclick="window.print()">Download PDF</button>
-</body>
-</html>`
+  const html = isIndian
+    ? renderGstInvoice(invoiceNumber, invoiceDate, tx, profile, user.email || '', amountUsd)
+    : renderInternationalInvoice(invoiceNumber, invoiceDate, tx, profile, user.email || '', amountUsd)
 
   return new NextResponse(html, {
     headers: {

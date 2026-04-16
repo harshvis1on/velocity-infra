@@ -15,7 +15,7 @@ function StatusBadge({ kind }: { kind: BadgeKind }) {
     },
     planned: {
       label: 'Planned',
-      className: 'border-white/10 bg-white/[0.03] text-gray-500',
+      className: 'border-white/[0.06] bg-white/[0.03] text-[#64748B]',
     },
     tracking: {
       label: 'Tracking',
@@ -76,7 +76,7 @@ const DOC_CARDS: {
     href: '/docs/sdk',
     title: 'Python SDK',
     description: 'Programmatic access to GPU cloud',
-    badge: 'partial',
+    badge: 'live',
     icon: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>,
   },
   {
@@ -89,7 +89,7 @@ const DOC_CARDS: {
   {
     href: '/docs/billing',
     title: 'Pricing & Billing',
-    description: 'Per-GPU/min billing, GST, invoices',
+    description: 'Wallet billing, invoicing, and tax compliance',
     badge: 'live',
     icon: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
   },
@@ -102,18 +102,18 @@ const DOC_CARDS: {
   },
   {
     href: '/docs/status',
-    title: 'Production Status',
-    description: "What works, what doesn't, what's planned",
+    title: 'Roadmap',
+    description: 'Platform roadmap and upcoming features',
     badge: 'tracking',
     icon: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>,
   },
 ];
 
 const DIFFERENTIATORS = [
-  { text: 'India-first: INR pricing, UPI payments, GST invoices' },
-  { text: 'DPDP compliant, all data stays in India' },
+  { text: 'Global platform: USD pricing, pay with cards, UPI, or wire' },
+  { text: 'Jurisdiction-aware invoices: GST for India, standard for international' },
   { text: 'GPU slicing: rent 1, 2, 4, or 8 GPUs from one machine' },
-  { text: 'Per-minute billing, pay for what you use' },
+  { text: 'Per-minute billing, pay only for what you use' },
   { text: 'Verified hosts with identity verification for every provider' },
   { text: 'Agent-friendly: works with Cursor, Claude Code, and Codex' },
 ];
@@ -123,51 +123,40 @@ export default function DocsWelcomePage() {
     <div className="space-y-16">
       {/* Hero */}
       <header className="space-y-4">
-        <div className="text-[11px] uppercase tracking-[0.2em] text-gray-600 font-medium">
+        <div className="text-[11px] uppercase tracking-[0.2em] text-[#64748B] font-medium">
           Documentation
         </div>
-        <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-[1.05]">
+        <h1 className="font-heading text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-[1.05]">
           Velocity <span className="text-primary">Docs</span>
         </h1>
-        <p className="max-w-2xl text-lg text-gray-500 leading-relaxed">
+        <p className="max-w-2xl text-lg text-[#64748B] leading-relaxed">
           Everything you need to rent GPUs at up to 80% off cloud pricing. Deploy in seconds, or list your hardware to earn.
         </p>
       </header>
 
-      {/* Status banner */}
-      <div
-        role="status"
-        className="rounded-xl border border-amber-500/10 bg-amber-500/[0.03] px-5 py-4 text-sm leading-relaxed text-amber-200/80"
-      >
-        <p className="font-medium">
-          Platform Status: Pre-Production. Core infrastructure is built. Some features are
-          incomplete or untested. This documentation honestly reflects what works today and
-          what&apos;s still in progress.
-        </p>
-      </div>
-
       {/* How it works */}
       <section className="space-y-3">
-        <h2 className="text-2xl font-bold text-white">How it works</h2>
-        <p className="text-gray-500 leading-relaxed max-w-3xl">
-          Velocity is a GPU marketplace where AI developers rent GPUs at a fraction of cloud pricing.
-          Browse available hardware, deploy in seconds, and pay per minute. Providers can list their
-          own GPUs and earn yield from idle hardware.
+        <h2 className="font-heading text-2xl font-bold text-white">How it works</h2>
+        <p className="text-[#64748B] leading-relaxed max-w-3xl">
+          Velocity is a GPU marketplace where AI developers rent GPUs at up to 80% less than AWS,
+          GCP, or Azure. Browse available hardware, pick a template, and deploy in seconds. Pay per
+          minute with your wallet balance. GPU providers can list their hardware and earn revenue from
+          the Velocity network.
         </p>
       </section>
 
       {/* Card grid */}
       <section className="space-y-6">
-        <h2 className="text-2xl font-bold text-white">Explore the docs</h2>
+        <h2 className="font-heading text-2xl font-bold text-white">Explore the docs</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {DOC_CARDS.map((card) => (
             <Link
               key={card.href + card.title}
               href={card.href}
-              className="group flex flex-col rounded-xl border border-white/[0.06] p-5 transition-all hover:border-primary/20 hover:bg-white/[0.02]"
+              className="group flex flex-col rounded-xl border border-white/[0.06] bg-white/[0.03] p-5 transition-all hover:border-primary/20 hover:bg-white/[0.05]"
             >
               <div className="flex items-start justify-between gap-3">
-                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] text-gray-500 transition-colors group-hover:text-primary group-hover:border-primary/20">
+                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] text-[#64748B] transition-colors group-hover:text-primary group-hover:border-primary/20">
                   {card.icon}
                 </span>
                 <StatusBadge kind={card.badge} />
@@ -175,8 +164,8 @@ export default function DocsWelcomePage() {
               <h3 className="mt-4 font-medium text-white group-hover:text-primary transition-colors text-sm">
                 {card.title}
               </h3>
-              <p className="mt-1.5 flex-1 text-xs text-gray-600 leading-relaxed">{card.description}</p>
-              <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-gray-600 group-hover:text-primary transition-colors">
+              <p className="mt-1.5 flex-1 text-xs text-[#475569] leading-relaxed">{card.description}</p>
+              <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[#475569] group-hover:text-primary transition-colors">
                 Read more
                 <svg className="h-3 w-3 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
               </span>
@@ -187,12 +176,12 @@ export default function DocsWelcomePage() {
 
       {/* What makes us different */}
       <section className="space-y-6 border-t border-white/[0.04] pt-14">
-        <h2 className="text-2xl font-bold text-white">What makes us <span className="text-primary">different</span></h2>
+        <h2 className="font-heading text-2xl font-bold text-white">What makes us <span className="text-primary">different</span></h2>
         <ul className="grid gap-2.5 sm:grid-cols-2 max-w-4xl">
           {DIFFERENTIATORS.map((item) => (
             <li
               key={item.text}
-              className="flex gap-3 items-start rounded-lg border border-white/[0.04] px-4 py-3 text-sm text-gray-500 leading-snug"
+              className="flex gap-3 items-start rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3 text-sm text-[#94A3B8] leading-snug"
             >
               <span className="text-primary text-xs mt-0.5 shrink-0">✓</span>
               <span>{item.text}</span>

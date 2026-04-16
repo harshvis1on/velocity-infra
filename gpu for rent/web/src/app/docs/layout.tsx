@@ -13,7 +13,7 @@ export default function DocsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#060606] text-white" style={{ fontFamily: 'var(--font-sans, Outfit, sans-serif)' }}>
+    <div className="min-h-[calc(100vh-4rem)] bg-[#0B0F19] text-white">
       <DocsSidebar />
       <div className="md:pl-[260px]">
         <main className="mx-auto w-full max-w-[850px] px-6 py-10 md:px-8 md:py-14 lg:py-16">

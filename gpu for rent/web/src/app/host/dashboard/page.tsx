@@ -4,6 +4,7 @@ import AddMachineModal from './AddMachineModal';
 import CreateOfferModal from './CreateOfferModal';
 import dynamic from 'next/dynamic';
 const SeedButton = dynamic(() => import('./SeedButton'), { ssr: false });
+import SyncProxyButton from './SyncProxyButton';
 import MachineList from './MachineList';
 import EarningsDashboard from './EarningsDashboard';
 import ProfileDropdown from '../../console/ProfileDropdown';
@@ -22,16 +23,16 @@ export default async function HostDashboard() {
     const [{ data: p }, { data: machines }, { data: earningsTx }] = await Promise.all([
       supabase
         .from('users')
-        .select('wallet_balance_inr, phone, role, referral_code, xp, provider_tier')
+        .select('wallet_balance_usd, phone, role, referral_code, xp, provider_tier')
         .eq('id', user.id)
         .single(),
       supabase
         .from('machines')
         .select(`
           *,
-          instances (id, renter_id, status, created_at, ended_at, total_cost_inr),
-          offers (id, status, price_per_gpu_hr_inr, storage_price_per_gb_month_inr, min_gpu, offer_end_date, interruptible_min_price_inr, reserved_discount_factor),
-          rental_contracts (id, gpu_count, gpu_indices, status, rental_end_date, renter_id, rental_type, price_per_gpu_hr_inr),
+          instances (id, renter_id, status, created_at, ended_at, total_cost_usd),
+          offers (id, status, price_per_gpu_hr_usd, storage_price_per_gb_month_usd, min_gpu, offer_end_date, interruptible_min_price_usd, reserved_discount_factor),
+          rental_contracts (id, gpu_count, gpu_indices, status, rental_end_date, renter_id, rental_type, price_per_gpu_hr_usd),
           maintenance_windows (id, start_date, duration_hrs, status)
         `)
         .eq('host_id', user.id)
@@ -39,7 +40,7 @@ export default async function HostDashboard() {
         .order('created_at', { ascending: false }),
       supabase
         .from('transactions')
-        .select('amount_inr')
+        .select('amount_usd')
         .eq('user_id', user.id)
         .eq('type', 'host_payout')
         .eq('status', 'completed'),
@@ -47,10 +48,10 @@ export default async function HostDashboard() {
 
     if (p) {
       profile = p;
-      walletBalance = p.wallet_balance_inr
+      walletBalance = p.wallet_balance_usd
     }
     if (machines) myMachines = machines
-    totalEarned = (earningsTx || []).reduce((sum, tx) => sum + (tx.amount_inr || 0), 0)
+    totalEarned = (earningsTx || []).reduce((sum, tx) => sum + (tx.amount_usd || 0), 0)
   }
   const activeRentals = myMachines.reduce((acc, m) => {
     return acc + (m.rental_contracts?.filter((c: any) => c.status === 'active').length || 0)
@@ -71,7 +72,7 @@ export default async function HostDashboard() {
     { name: 'Silver', key: 'silver', icon: '🥈', min: 1000, fee: '12%', color: 'from-gray-300 to-gray-500', next: 5000 },
     { name: 'Gold', key: 'gold', icon: '🥇', min: 5000, fee: '10%', color: 'from-yellow-400 to-yellow-600', next: 15000 },
     { name: 'Platinum', key: 'platinum', icon: '💎', min: 15000, fee: '7%', color: 'from-cyan-300 to-cyan-600', next: 50000 },
-    { name: 'Diamond', key: 'diamond', icon: '👑', min: 50000, fee: '5%', color: 'from-primary to-emerald-500', next: 100000 },
+    { name: 'Diamond', key: 'diamond', icon: '👑', min: 50000, fee: '5%', color: 'from-primary to-violet-400', next: 100000 },
   ]
   const dbTier = profile?.provider_tier || 'bronze'
   const currentTier = TIERS.find(t => t.key === dbTier) || TIERS[0]
@@ -81,7 +82,7 @@ export default async function HostDashboard() {
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Host';
 
   return (
-    <div className="min-h-screen flex bg-[#060606] text-white" style={{ fontFamily: 'var(--font-sans, Outfit, sans-serif)' }}>
+    <div className="min-h-screen flex bg-[#0B0F19] text-[#E2E8F0]">
       <ConsoleSidebar
         role={profile?.role || 'host'}
         walletBalance={walletBalance}
@@ -91,7 +92,7 @@ export default async function HostDashboard() {
       />
 
       <main className="flex-1 flex flex-col h-screen overflow-y-auto">
-        <header className="h-14 flex items-center justify-between px-8 border-b border-white/[0.06] bg-[#060606]/80 backdrop-blur-xl sticky top-0 z-10">
+        <header className="h-14 flex items-center justify-between px-8 border-b border-white/[0.06] bg-[#0B0F19]/80 backdrop-blur-xl sticky top-0 z-10">
           <div className="flex items-center gap-3">
             <h1 className="text-sm font-medium text-white">Provider Dashboard</h1>
             {activeRentals > 0 && (
@@ -103,6 +104,7 @@ export default async function HostDashboard() {
           </div>
           <div className="flex items-center gap-2">
             {process.env.NODE_ENV === 'development' && <SeedButton />}
+            <SyncProxyButton />
             <CreateOfferModal machines={myMachines} />
             <AddMachineModal />
             <ProfileDropdown userName={userName} email={user?.email || ''} />
@@ -116,13 +118,13 @@ export default async function HostDashboard() {
               { label: 'Machines', value: `${activeMachines}`, sub: `${listedMachines} listed` },
               { label: 'GPUs', value: `${totalGpus}`, sub: `${allocatedGpus} rented` },
               { label: 'Active Rentals', value: `${activeRentals}`, sub: activeRentals > 0 ? 'earning now' : 'waiting' },
-              { label: 'Total Earned', value: `₹${totalEarned.toFixed(0)}`, sub: 'all time', highlight: true },
-              { label: 'Balance', value: `₹${walletBalance.toFixed(0)}`, sub: 'withdrawable', highlight: true },
+              { label: 'Total Earned', value: `$${totalEarned.toFixed(0)}`, sub: 'all time', highlight: true },
+              { label: 'Balance', value: `$${walletBalance.toFixed(0)}`, sub: 'withdrawable', highlight: true },
             ].map(stat => (
               <div key={stat.label} className="border border-white/[0.06] rounded-xl p-4 bg-white/[0.02]">
-                <div className="text-[10px] text-gray-600 uppercase tracking-[0.15em] mb-1.5">{stat.label}</div>
-                <div className={`text-xl font-bold tabular-nums ${stat.highlight ? 'text-primary' : 'text-white'}`}>{stat.value}</div>
-                <div className="text-[10px] text-gray-600 mt-0.5">{stat.sub}</div>
+                <div className="text-[10px] text-[#64748B] uppercase tracking-[0.15em] mb-1.5">{stat.label}</div>
+                <div className={`text-xl font-bold tabular-nums ${stat.highlight ? 'text-primary' : 'text-[#E2E8F0]'}`}>{stat.value}</div>
+                <div className="text-[10px] text-[#64748B] mt-0.5">{stat.sub}</div>
               </div>
             ))}
           </div>
@@ -133,14 +135,14 @@ export default async function HostDashboard() {
               <div className="flex items-center gap-3 shrink-0">
                 <span className="text-3xl">{currentTier.icon}</span>
                 <div>
-                  <div className="text-sm font-bold text-white">{currentTier.name} Provider</div>
-                  <div className="text-xs text-gray-600">Platform fee: {currentTier.fee}</div>
+                  <div className="text-sm font-bold text-[#E2E8F0]">{currentTier.name} Provider</div>
+                  <div className="text-xs text-[#64748B]">Platform fee: {currentTier.fee}</div>
                 </div>
               </div>
               <div className="flex-1">
                 <div className="flex justify-between text-xs mb-1.5">
-                  <span className="text-gray-500 tabular-nums">{xp.toLocaleString()} XP</span>
-                  {nextTier && <span className="text-gray-700">{nextTier.min.toLocaleString()} XP for {nextTier.name}</span>}
+                  <span className="text-[#94A3B8] tabular-nums">{xp.toLocaleString()} XP</span>
+                  {nextTier && <span className="text-[#475569]">{nextTier.min.toLocaleString()} XP for {nextTier.name}</span>}
                 </div>
                 <div className="h-2 bg-white/[0.04] rounded-full overflow-hidden">
                   <div
@@ -149,7 +151,7 @@ export default async function HostDashboard() {
                   />
                 </div>
                 {nextTier && (
-                  <div className="text-[10px] text-gray-700 mt-1">
+                  <div className="text-[10px] text-[#475569] mt-1">
                     {(nextTier.min - xp).toLocaleString()} XP to {nextTier.name} ({nextTier.fee} fee)
                   </div>
                 )}
@@ -160,8 +162,8 @@ export default async function HostDashboard() {
                   { label: 'GPUs', value: totalGpus },
                 ].map(s => (
                   <div key={s.label} className="border border-white/[0.06] rounded-lg px-3 py-2 text-center min-w-[56px]">
-                    <div className="text-sm font-bold text-white tabular-nums">{s.value}</div>
-                    <div className="text-[9px] text-gray-600 uppercase tracking-wider">{s.label}</div>
+                    <div className="text-sm font-bold text-[#E2E8F0] tabular-nums">{s.value}</div>
+                    <div className="text-[9px] text-[#64748B] uppercase tracking-wider">{s.label}</div>
                   </div>
                 ))}
               </div>
@@ -180,7 +182,7 @@ export default async function HostDashboard() {
 
           {/* Quick help */}
           {myMachines.length > 0 && (
-            <div className="mt-6 flex items-center justify-center gap-6 text-xs text-gray-600">
+            <div className="mt-6 flex items-center justify-center gap-6 text-xs text-[#64748B]">
               <Link href="/host/setup" className="hover:text-primary transition-colors">+ Add machine</Link>
               <span className="text-white/[0.06]">|</span>
               <Link href="/host/datacenter-apply" className="hover:text-primary transition-colors">Enterprise tier</Link>

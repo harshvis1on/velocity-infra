@@ -31,18 +31,18 @@ export default function ProfileDropdown({ userName, email }: { userName: string,
     <div className="relative" ref={dropdownRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-3 hover:bg-white/5 p-1.5 rounded-full transition-colors"
+        className="flex items-center gap-3 hover:bg-white/[0.06] p-1.5 rounded-full transition-colors"
       >
-        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-blue-500 flex items-center justify-center text-black font-bold text-sm shadow-lg">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary-dark to-primary flex items-center justify-center text-white font-bold text-sm shadow-lg">
           {userName.charAt(0).toUpperCase()}
         </div>
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-[#0a0a0a] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="p-4 border-b border-white/10 bg-white/5">
+        <div className="absolute right-0 mt-2 w-56 bg-[#0B0F19] border border-white/[0.06] rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="p-4 border-b border-white/[0.06] bg-white/[0.03]">
             <div className="font-bold text-white truncate">{userName}</div>
-            <div className="text-xs text-gray-400 truncate">{email}</div>
+            <div className="text-xs text-[#94A3B8] truncate">{email}</div>
           </div>
           
           <div className="p-2">
